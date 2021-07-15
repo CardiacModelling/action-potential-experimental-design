@@ -32,6 +32,17 @@ fink_2008_current = {
     'inak.s': 'inak.i_NaK',
 }
 
+grandi_2010_current = {
+    'ina.s': 'I_Na.I_Na',
+    'ical.s': 'I_Ca.I_Ca',
+    'ikr.s': 'I_Kr.I_kr',
+    'iks.s': 'I_Ks.I_ks',
+    'ito.s': 'I_to.I_to',
+    'inaca.s': 'I_NCX.I_ncx',
+    'ik1.s': 'I_Ki.I_ki',
+    'inak.s': 'I_NaK.I_nak',
+}
+
 ohara_2011_current = {
     'ina.s': 'ina.INa',
     'ical.s': 'ical.ICaL',
@@ -45,7 +56,7 @@ ohara_2011_current = {
 
 cipa_2017_current = {
     'ina.s': 'INa.INa',
-    'ical.s': 'ICal.ICaL',
+    'ical.s': 'ICaL.ICaL',
     'ikr.s': 'IKr.IKr',
     'iks.s': 'IKs.IKs',
     'ito.s': 'Ito.Ito',
@@ -56,7 +67,7 @@ cipa_2017_current = {
 
 tomek_2019_current = {
     'ina.s': 'INa.INa',
-    'ical.s': 'ICal.ICaL',
+    'ical.s': 'ICaL.ICaL',
     'ikr.s': 'IKr.IKr',
     'iks.s': 'IKs.IKs',
     'ito.s': 'Ito.Ito',
@@ -70,6 +81,7 @@ model_current = {
     'fink-2008.mmt': fink_2008_current,
     'fink-2008-lei-2019-herg.mmt': fink_2008_current,
     'fink-2008-lei-2019-herg-tunable.mmt': fink_2008_current,
+    'grandi-2010.mmt': grandi_2010_current,
     'ohara-2011.mmt': ohara_2011_current,
     'cipa-2017.mmt': cipa_2017_current,
     'tomek-2019.mmt': tomek_2019_current,
@@ -101,6 +113,17 @@ fink_2008_conductance = {
     'inaca.s': 'inaca.K_NaCa',
     'ik1.s': 'ik1.g_K1_0',
     'inak.s': 'inak.P_NaK',
+}
+
+grandi_2010_conductance = {
+    'ina.s': 'parameters.GNa',
+    'ical.s': 'parameters.I_Ca_scale',
+    'ikr.s': 'I_Kr.gkr',
+    'iks.s': 'I_Ks.i_ks_scale',
+    'ito.s': 'I_to.I_to_scale',
+    'inaca.s': 'parameters.IbarNCX',
+    'ik1.s': 'I_Ki.i_ki_scale',
+    'inak.s': 'parameters.IbarNaK',
 }
 
 ohara_2011_conductance = {
@@ -141,7 +164,9 @@ model_conductance = {
     'fink-2008.mmt': fink_2008_conductance,
     'fink-2008-lei-2019-herg.mmt': fink_2008_conductance,
     'fink-2008-lei-2019-herg-tunable.mmt': fink_2008_conductance,
+    'grandi-2010.mmt': grandi_2010_conductance,
     'ohara-2011.mmt': ohara_2011_conductance,
+    'cipa-2017.mmt': cipa_2017_conductance,
     'tomek-2019.mmt': tomek_2019_conductance,
 }
 
@@ -182,6 +207,13 @@ model_ion = {
                     ('calcium.Ca_i',default_cai),
                     ('ion.Ca_o',default_cao),
                     ],
+    'grandi-2010.mmt': [('Na_Concentrations.Na_i',default_nai),
+                    ('parameters.Nao',default_nao),
+                    ('K_Concentration.K_i',default_ki),
+                    ('parameters.Ko',default_ko),
+                    ('Ca_Concentrations.Ca_i',default_cai),
+                    ('parameters.Cao',default_cao),
+                    ],
     'ohara-2011.mmt': [('sodium.Nai',default_nai),
                     ('extra.Nao',default_nao),
                     ('potassium.Ki',default_ki),
@@ -214,6 +246,7 @@ model_stim_amp = {
     'fink-2008.mmt': ('stimulus.stim_amplitude', default_stim_amp),
     'fink-2008-lei-2019-herg.mmt': ('stimulus.stim_amplitude', default_stim_amp),
     'fink-2008-lei-2019-herg-tunable.mmt': ('stimulus.stim_amplitude', default_stim_amp),
+    'grandi-2010.mmt': ('interface.stim_amplitude', default_stim_amp),
     'ohara-2011.mmt': ('stimulus.amplitude', default_stim_amp),
     'cipa-2017.mmt': ('membrane.i_Stim_Amplitude', default_stim_amp),
     'tomek-2019.mmt': ('membrane.i_Stim_Amplitude', default_stim_amp),
@@ -226,6 +259,7 @@ model_stim_setup = {
     'fink-2008.mmt': default_stim_setup,
     'fink-2008-lei-2019-herg.mmt': default_stim_setup,
     'fink-2008-lei-2019-herg-tunable.mmt': default_stim_setup,
+    'grandi-2010.mmt': default_stim_setup,
     'ohara-2011.mmt': default_stim_setup,
     'cipa-2017.mmt': default_stim_setup,
     'tomek-2019.mmt': default_stim_setup,
