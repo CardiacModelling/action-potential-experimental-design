@@ -125,7 +125,7 @@ dot(Tn_CL) = parameters.kon_tncl * Ca_Concentrations.Ca_i * (parameters.Bmax_TnC
     in [mM]
 
 [I_Ca]
-I_Ca = I_Ca_junc + I_Ca_sl
+I_Ca = parameters.I_Ca_scale * (I_Ca_junc + I_Ca_sl)
     in [A/F]
 I_CaK = ibark * d * f * (parameters.Fjunc_CaL * (fcaCaj + (1 - f_Ca_Bj)) + parameters.Fsl_CaL * (fcaCaMSL + (1 - f_Ca_Bsl))) * parameters.Q10CaL ^ parameters.Qpow * 0.45 * 1
     in [A/F]
@@ -191,8 +191,10 @@ I_Clbk = parameters.GClB * (membrane_potential.V_m - parameters.ecl)
     in [A/F]
 
 [I_Ki]
-I_ki = 1 * 0.35 [mS/uF] * sqrt(parameters.Ko / 5.4 [mM]) * kiss * (membrane_potential.V_m - parameters.ek)
+I_ki = i_ki_scale * 0.35 [mS/uF] * sqrt(parameters.Ko / 5.4 [mM]) * kiss * (membrane_potential.V_m - parameters.ek)
     in [A/F]
+i_ki_scale = 1
+    in [1]
 aki = 1.02 / (1 + exp(0.2385 [1/mV] * (membrane_potential.V_m - parameters.ek - 59.215 [mV])))
     in [1]
 bki = (0.49124 * exp(0.08032 [1/mV] * (membrane_potential.V_m + 5.476 [mV] - parameters.ek)) + exp(0.06175 [1/mV] * (membrane_potential.V_m - parameters.ek - 594.31 [mV]))) / (1 + exp(-0.5143 [1/mV] * (membrane_potential.V_m - parameters.ek + 4.753 [mV])))
@@ -211,9 +213,9 @@ kp_kp = 1 / (1 + exp(7.488 - membrane_potential.V_m / 5.98 [mV]))
     in [1]
 
 [I_Kr]
-I_kr = gkr * x_kr * rkr * (membrane_potential.V_m - parameters.ek)
+I_kr = gkr * sqrt(parameters.Ko / 5.4 [mM]) * x_kr * rkr * (membrane_potential.V_m - parameters.ek)
     in [A/F]
-gkr = 0.035 [mS/uF] * sqrt(parameters.Ko / 5.4 [mM])
+gkr = 0.035 [mS/uF]
     in [mS/uF]
 rkr = 1 / (1 + exp((membrane_potential.V_m + 74 [mV]) / 24 [mV]))
     in [1]
@@ -225,7 +227,7 @@ xrss = 1 / (1 + exp(-(membrane_potential.V_m + 10 [mV]) / 5 [mV]))
     in [1]
 
 [I_Ks]
-I_ks = I_ks_junc + I_ks_sl
+I_ks = i_ks_scale * (I_ks_junc + I_ks_sl)
     in [A/F]
 I_ks_junc = parameters.Fjunc * gks_junc * x_ks ^ 2 * (membrane_potential.V_m - eks)
     in [A/F]
@@ -237,6 +239,8 @@ gks_junc = 0.0035 [mS/uF]
     in [mS/uF]
 gks_sl = 0.0035 [mS/uF]
     in [mS/uF]
+i_ks_scale = 1
+    in [1]
 tauxs = 990.1 [ms] / (1 + exp(-(membrane_potential.V_m + 2.436 [mV]) / 14.12 [mV]))
     in [ms]
 dot(x_ks) = (xsss - x_ks) / tauxs
@@ -335,8 +339,10 @@ GtoFast = piecewise(parameters.epi == 1, 1 [mS/uF] * 0.13 * 0.88, 0.13 [mS/uF] *
     in [mS/uF]
 GtoSlow = piecewise(parameters.epi == 1, 1 [mS/uF] * 0.13 * 0.12, 0.13 [mS/uF] * 0.3 * 0.964)
     in [mS/uF]
-I_to = I_tos + I_tof
+I_to = I_to_scale * (I_tos + I_tof)
     in [A/F]
+I_to_scale = 1
+    in [1]
 I_tof = GtoFast * x_to_f * y_to_f * (membrane_potential.V_m - parameters.ek)
     in [A/F]
 I_tos = GtoSlow * x_to_s * y_to_s * (membrane_potential.V_m - parameters.ek)
@@ -445,7 +451,9 @@ time = 0 [ms] bind time
     in [ms]
 
 [interface]
-I_app = 0 [A/F] bind pace
+pace = 0 bind pace
+stim_amplitude = -80 [A/F]
+I_app = pace * stim_amplitude
     in [A/F]
 
 [membrane_potential]
@@ -457,7 +465,7 @@ I_Na_tot = Na_Concentrations.I_Na_tot_junc + Na_Concentrations.I_Na_tot_sl
     in [A/F]
 I_tot = I_Na_tot + I_Cl_tot + I_Ca_tot + K_Concentration.I_K_tot
     in [A/F]
-dot(V_m) = -(I_tot - interface.I_app)
+dot(V_m) = -(I_tot + interface.I_app)
     in [mV]
 
 [parameters]
@@ -529,6 +537,8 @@ IbarNaK = 1 [A/F] * 1.8
     in [A/F]
 IbarSLCaP = 0.0673 [A/F]
     in [A/F]
+I_Ca_scale = 1
+    in [1]
 J_ca_juncsl =  8.24130000000000044e-13 [m^3/s]
     in [m^3/s]
 J_ca_slmyo =  3.27429999999999989e-12 [m^3/s]
@@ -700,4 +710,4 @@ pNaK = 0.01833
 
 [[protocol]]
 # Level  Start    Length   Period   Multiplier
-25       100.0    1.0      1000.0   0
+1       100.0    1.0      1000.0   0

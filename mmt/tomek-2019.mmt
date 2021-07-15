@@ -105,8 +105,13 @@ Iss = 0.5 * (intracellular_ions.nass + intracellular_ions.kss + intracellular_io
     in [1]
 Kmn = 0.002 [mM]
     in [mM]
-PCa = piecewise(environment.celltype == 1, PCa_b * 1.2, environment.celltype == 2, PCa_b * 2, PCa_b)
+#PCa = piecewise(environment.celltype == 1, PCa_b * 1.2, environment.celltype == 2, PCa_b * 2, PCa_b)
+#    in [1]
+#PCa_b =  8.37570000000000046e-5
+#    in [1]
+PCa =  8.37570000000000046e-5  # endo
     in [1]
+    oxmeta: membrane_L_type_calcium_current_conductance
 PCaK = 0.0003574 * PCa
     in [1]
 PCaKp = 0.0003574 * PCap
@@ -115,9 +120,6 @@ PCaNa = 0.00125 * PCa
     in [1]
 PCaNap = 0.00125 * PCap
     in [1]
-PCa_b =  8.37570000000000046e-5
-    in [1]
-    oxmeta: membrane_L_type_calcium_current_conductance
 PCap = 1.1 * PCa
     in [1]
 PhiCaK_i = 1 * membrane.vffrt * (gamma_ki * intracellular_ions.ki * exp(1 * membrane.vfrt) - gamma_ko * extracellular.ko) / (exp(1 * membrane.vfrt) - 1)
@@ -246,9 +248,11 @@ KdClCa = 0.1 [mM]
     in [mM]
 
 [IK1]
-GK1 = piecewise(environment.celltype == 1, GK1_b * 1.2, environment.celltype == 2, GK1_b * 1.3, GK1_b)
-    in [mS/uF]
-GK1_b = 0.6992 [mS/uF]
+#GK1 = piecewise(environment.celltype == 1, GK1_b * 1.2, environment.celltype == 2, GK1_b * 1.3, GK1_b)
+#    in [mS/uF]
+#GK1_b = 0.6992 [mS/uF]
+#    in [mS/uF]
+GK1 = 0.6992 [mS/uF]  # endo
     in [mS/uF]
     oxmeta: membrane_inward_rectifier_potassium_current_conductance
 IK1 = GK1 * sqrt(extracellular.ko / 5 [mM]) * K1ss * (membrane.v - reversal_potentials.EK)
@@ -278,9 +282,11 @@ dot(C2) = alpha * C3 + beta_1 * C1 - (beta + alpha_1) * C2
     in [1]
 dot(C3) = beta * C2 - alpha * C3
     in [1]
-GKr = piecewise(environment.celltype == 1, GKr_b * 1.3, environment.celltype == 2, GKr_b * 0.8, GKr_b)
-    in [mS/uF]
-GKr_b = 0.0321 [mS/uF]
+#GKr = piecewise(environment.celltype == 1, GKr_b * 1.3, environment.celltype == 2, GKr_b * 0.8, GKr_b)
+#    in [mS/uF]
+#GKr_b = 0.0321 [mS/uF]
+#    in [mS/uF]
+GKr = 0.0321 [mS/uF]  # endo
     in [mS/uF]
     oxmeta: membrane_rapid_delayed_rectifier_potassium_current_conductance
 dot(I) = alpha_C2ToI * C1 + alpha_i * O - (beta_ItoC2 + beta_i) * I
@@ -312,9 +318,11 @@ beta_i = 0.06525 [mS/uF] * exp(-0.8209 * membrane.vfrt)
     in [mS/uF]
 
 [IKs]
-GKs = piecewise(environment.celltype == 1, GKs_b * 1.4, GKs_b)
-    in [mS/uF]
-GKs_b = 0.0011 [mS/uF]
+#GKs = piecewise(environment.celltype == 1, GKs_b * 1.4, GKs_b)
+#    in [mS/uF]
+#GKs_b = 0.0011 [mS/uF]
+#    in [mS/uF]
+GKs = 0.0011 [mS/uF]  # endo
     in [mS/uF]
     oxmeta: membrane_slow_delayed_rectifier_potassium_current_conductance
 IKs = GKs * KsCa * xs1 * xs2 * (membrane.v - reversal_potentials.EKs)
@@ -396,9 +404,11 @@ E4_i = x4_i / (x1_i + x2_i + x3_i + x4_i)
     in [1]
 E4_ss = x4_ss / (x1_ss + x2_ss + x3_ss + x4_ss)
     in [1]
-Gncx = piecewise(environment.celltype == 1, Gncx_b * 1.1, environment.celltype == 2, Gncx_b * 1.4, Gncx_b)
-    in [mS/uF]
-Gncx_b = 0.0034 [mS/uF]
+#Gncx = piecewise(environment.celltype == 1, Gncx_b * 1.1, environment.celltype == 2, Gncx_b * 1.4, Gncx_b)
+#    in [mS/uF]
+#Gncx_b = 0.0034 [mS/uF]
+#    in [mS/uF]
+Gncx = 0.0034 [mS/uF]  # endo
     in [mS/uF]
     oxmeta: membrane_sodium_calcium_exchanger_current_conductance
 INaCa_fractionSS = 0.35
@@ -604,9 +614,11 @@ MgATP = 9.8 [mM]
     in [mM]
 P = eP / (1 + H / Khp + intracellular_ions.nai / Knap + intracellular_ions.ki / Kxkur)
     in [1]
-Pnak = piecewise(environment.celltype == 1, Pnak_b * 0.9, environment.celltype == 2, Pnak_b * 0.7, Pnak_b)
-    in [mS/uF]
-Pnak_b = 15.4509 [mS/uF]
+#Pnak = piecewise(environment.celltype == 1, Pnak_b * 0.9, environment.celltype == 2, Pnak_b * 0.7, Pnak_b)
+#    in [mS/uF]
+#Pnak_b = 15.4509 [mS/uF]
+#    in [mS/uF]
+Pnak = 15.4509 [mS/uF]  # endo
     in [mS/uF]
     oxmeta: membrane_sodium_potassium_pump_current_permeability
 a1 = k1p * (intracellular_ions.nai / Knai) ^ 3 / ((1 + intracellular_ions.nai / Knai) ^ 3 + (1 + intracellular_ions.ki / Kki) ^ 2 - 1)
@@ -726,9 +738,11 @@ AiS = 1 - AiF
     in [1]
 EKshift = 0 [mV]
     in [mV]
-Gto = piecewise(environment.celltype == 1, Gto_b * 2, environment.celltype == 2, Gto_b * 2, Gto_b)
-    in [mS/uF]
-Gto_b = 0.16 [mS/uF]
+#Gto = piecewise(environment.celltype == 1, Gto_b * 2, environment.celltype == 2, Gto_b * 2, Gto_b)
+#    in [mS/uF]
+#Gto_b = 0.16 [mS/uF]
+#    in [mS/uF]
+Gto = 0.16 [mS/uF]  # endo
     in [mS/uF]
     oxmeta: membrane_transient_outward_current_conductance
 Ito = Gto * (membrane.v - reversal_potentials.EK) * ((1 - fItop) * a * i + fItop * ap * ip)
@@ -832,7 +846,7 @@ tauNa = 2 [ms]
     in [ms]
 
 [environment]
-celltype = 0
+celltype = 0  # endo
     in [1]
 time = 0 [ms] bind time
     in [ms]
