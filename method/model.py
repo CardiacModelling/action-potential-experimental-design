@@ -6,6 +6,7 @@ from __future__ import print_function, unicode_literals
 import os
 import numpy as np
 import pints
+import pyoed
 import myokit
 
 from default import *
@@ -291,13 +292,13 @@ class CCModel(pints.ForwardModel):
             raise NotImplementedError
 
 
-class VCModel(pints.ForwardModel):
+class VCModel(pints.ForwardModel, pyoed.ForwardModel):
     """
-    # A voltage clamp (VC) model linking Myokit and Pints ForwardModel.
+    # A voltage clamp (VC) model linking Myokit and Pints, PyOED ForwardModel.
     """
 
-    def __init__(self, model_file, transform=None, dt=0.1, parameters=parameters,
-            max_evaluation_time=60):
+    def __init__(self, model_file, transform=None, dt=0.1,
+            parameters=parameters, n_steps=None, max_evaluation_time=60):
         """
         # model_file: mmt model file for myokit; main units: mV, ms, pA.
         # transform: transform search space parameters to model parameters.
@@ -313,13 +314,10 @@ class VCModel(pints.ForwardModel):
         self.parameters = parameters
         self.dt = dt
         self._vhold = vhold
+        self._n_steps = n_steps
 
         # maximum time allowed
         self.max_evaluation_time = max_evaluation_time
-
-        if '-old' in self._model_file_name:
-            self.dt = self.dt * 1e-3
-            self._vhold = self._vhold * 1e-3
 
         # Get current names of output
         self.current = []
@@ -375,8 +373,66 @@ class VCModel(pints.ForwardModel):
                     + 'model')
         print('Done')
 
+    ###########################################################################
+    # Interface to PINTS and PyOED
+    ###########################################################################
     def n_parameters(self):
+        return self.n_model_parameters()
+
+    def n_model_parameters(self):
         return len(self.parameters)
+
+    def n_design_variables(self):
+        return self._n_steps * 2
+
+    def design(variables):
+        self.set_voltage_protocol(variables)
+
+    def simulate(self, parameter, times=None, downsample=None,
+                 multi_input=False):
+        """
+        Generate current of voltage clamp using the given scalings.
+
+        Pre-simulated each current when setting the voltage clamp protocol.
+        Time is a dummy argument for PINTS only.
+
+        downsample: (int) downsample rate for the output time series.
+        multi_input: (bool) if True, the input `parameter` is a list of
+                     parameters to be simulated, and return a list of output
+                     matching the order of the input parameters.
+        """
+        parameter = np.array(parameter)
+        # Update model parameters
+        if self.transform is not None:
+            parameter = self.transform(parameter)
+        if multi_input:
+            # parameter = [set1_parameters, set2_parameters, ...]
+            # Broadcast `parameter` to
+            # (n_parameter_sets, n_currents [i.e. n_param_per_set],
+            #  1 [broadcast with n_t])
+            n_ps, n_c = parameter.shape
+            parameter = parameter.reshape((n_ps,)+(n_c,)+(1,))
+            # Simulation
+            sim = self.simulated_currents[:, :]
+            if downsample is not None:
+                # downsample time points
+                sim = sim[:, ::downsample]
+            # (n_ps, n_c, 1) * (n_c, n_t) -> (n_ps, n_c, n_t)
+            # sum across axis=1 -> (n_ps, n_t)
+            return np.sum(parameter * sim, axis=1)
+
+        else:
+            # parameter = set1_parameters
+            p = np.asarray(parameter).reshape(-1, 1)  # turn to column matrix
+            # Simulation
+            sim = self.simulated_currents[:, :]
+            if downsample is not None:
+                # downsample time points
+                sim = sim[:, ::downsample]
+            # (n_c, 1) * (n_c, n_t) -> (n_c, n_t)
+            # sum across axis=0 -> (n_t,)
+            return np.sum(p * sim, axis=0)
+    ###########################################################################
 
     def set_init_state(self, v):
         self.init_state = v
@@ -465,65 +521,6 @@ class VCModel(pints.ForwardModel):
 
     def current_list(self):
         return self.current
-
-    def simulate(self, parameter, times=None, downsample=None,
-                 multi_input=False):
-        """
-        Generate current of voltage clamp using the given scalings.
-
-        Pre-simulated each current when setting the voltage clamp protocol.
-        Time is a dummy argument for PINTS only.
-
-        downsample: (int) downsample rate for the output time series.
-        multi_input: (bool) if True, the input `parameter` is a list of
-                     parameters to be simulated, and return a list of output
-                     matching the order of the input parameters.
-        """
-        parameter = np.array(parameter)
-        # Update model parameters
-        if self.transform is not None:
-            parameter = self.transform(parameter)
-        """
-        # Simulate with modified model
-        for i, name in enumerate(self._conductance):
-            #'''
-            # normal way of doing it...
-            self.simulation1.set_constant(name,
-                                         parameter[i] * self.original[i])
-            self.simulation2.set_constant(name,
-                                         parameter[i] * self.original[i])
-            '''
-            # try to set conductance for non-literal...
-            self._model.get(name).set_rhs(parameter[i] * self.original[i])
-            '''
-        """
-        if multi_input:
-            # parameter = [set1_parameters, set2_parameters, ...]
-            # Broadcast `parameter` to
-            # (n_parameter_sets, n_currents [i.e. n_param_per_set],
-            #  1 [broadcast with n_t])
-            n_ps, n_c = parameter.shape
-            parameter = parameter.reshape((n_ps,)+(n_c,)+(1,))
-            # Simulation
-            sim = self.simulated_currents[:, :]
-            if downsample is not None:
-                # downsample time points
-                sim = sim[:, ::downsample]
-            # (n_ps, n_c, 1) * (n_c, n_t) -> (n_ps, n_c, n_t)
-            # sum across axis=1 -> (n_ps, n_t)
-            return np.sum(parameter * sim, axis=1)
-
-        else:
-            # parameter = set1_parameters
-            p = np.asarray(parameter).reshape(-1, 1)  # turn to column matrix
-            # Simulation
-            sim = self.simulated_currents[:, :]
-            if downsample is not None:
-                # downsample time points
-                sim = sim[:, ::downsample]
-            # (n_c, 1) * (n_c, n_t) -> (n_c, n_t)
-            # sum across axis=0 -> (n_t,)
-            return np.sum(p * sim, axis=0)
 
     def voltage(self, times):
         self.simulation1.reset()
