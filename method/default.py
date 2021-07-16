@@ -5,6 +5,29 @@
 # 'ina.s', 'ical.s' 'ikr.s', 'iks.s', 'ito.s', 'inaca.s', 'ik1.s'
 # 'inak.s', 'if.s'
 
+# model_voltage = {'mmt_file_name': voltage_variable_name_in_mmt}
+model_voltage = {
+    'tnnp-2004.mmt': 'membrane.V',
+    'fink-2008.mmt': 'membrane.V',
+    'fink-2008-lei-2019-herg.mmt': 'membrane.V',
+    'fink-2008-lei-2019-herg-tunable.mmt': 'membrane.V',
+    'grandi-2010.mmt': 'membrane_potential.V_m',
+    'ohara-2011.mmt': 'membrane.V',
+    'cipa-2017.mmt': 'membrane.v',
+    'tomek-2019.mmt': 'membrane.v',
+}
+
+model_pace = {
+    'tnnp-2004.mmt': 'engine.pace',
+    'fink-2008.mmt': 'engine.pace',
+    'fink-2008-lei-2019-herg.mmt': 'engine.pace',
+    'fink-2008-lei-2019-herg-tunable.mmt': 'engine.pace',
+    'grandi-2010.mmt': 'interface.pace',
+    'ohara-2011.mmt': 'engine.pace',
+    'cipa-2017.mmt': 'membrane.pace',
+    'tomek-2019.mmt': 'membrane.pace',
+}
+
 # model_current = {'mmt_file_name': current_dictionary}
 # current_dictionary = { conductance_scaling: current_in_mmt }
 # different model might call current differently...
@@ -139,7 +162,7 @@ ohara_2011_conductance = {
 
 cipa_2017_conductance = {
     'ina.s': 'INa.GNa',
-    'ical.s': 'ICal.PCa',
+    'ical.s': 'ICaL.PCa',
     'ikr.s': 'IKr.GKr',
     'iks.s': 'IKs.GKs',
     'ito.s': 'Ito.Gto',
@@ -150,7 +173,7 @@ cipa_2017_conductance = {
 
 tomek_2019_conductance = {
     'ina.s': 'INa.GNa',
-    'ical.s': 'ICal.PCa',
+    'ical.s': 'ICaL.PCa',
     'ikr.s': 'IKr.GKr',
     'iks.s': 'IKs.GKs',
     'ito.s': 'Ito.Gto',

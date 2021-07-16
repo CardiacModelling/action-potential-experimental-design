@@ -23,9 +23,9 @@ seed_id = 101  # random seed
 run_id = 0
 
 criterion_list = dict(
-    'A'=pyoed.A_criterion,
-    'D'=pyoed.D_criterion,
-    'E'=pyoed.Estar_criterion,
+    A=pyoed.A_criterion,
+    D=pyoed.D_criterion,
+    E=pyoed.Estar_criterion,
 )
 
 parser = argparse.ArgumentParser('LSA for VC experiments.')
@@ -44,7 +44,7 @@ if not os.path.isdir(savedir):
 np.random.seed(seed_id)
 print('Seed ID: ', seed_id)
 
-model = m.VCModel(model_file, transform=None, dt=dt, n_steps=n_steps)
+model = m.VCModel(args.model_file, transform=None, dt=dt, n_steps=n_steps)
 
 # protocol parameter: [step_1_voltage, step_1_duration, step_2..., step3...]
 lower = [-120, 50] * n_steps
@@ -52,19 +52,19 @@ upper = [60, 2e3] * n_steps
 boundaries = pints.RectangularBoundaries(lower, upper)
 
 # Create design
-default_param = np.ones(model_list[0].n_parameters())
+default_param = np.ones(model.n_parameters())
+h = 1e-3
 design = pyoed.LocalSensitivityDesignMeasure(model, default_param,
-                                             criterion=args.criterion)
+    criterion=criterion_list[args.criterion])
 p_evaluate = np.copy(design._method.ask())
 
 # DEBUG: Test parameter samples with a simple protocol
 if args.debug:
     test_prt = [-80, 200, 20, 500, -40, 500, -80, 200]
     test_t = np.arange(0, np.sum(test_prt[1::2]), dt)
-    for model in model_list:
-        model.set_voltage_protocol(test_prt)
-        for p in p_evaluate:
-            plt.plot(test_t, model.simulate(p, times=test_t))
+    model.set_voltage_protocol(test_prt)
+    for p in p_evaluate:
+        plt.plot(test_t, model.simulate(p, times=test_t))
     plt.xlabel('Times (ms)')
     plt.ylabel('Current (pA)')
     plt.savefig('%s/%s-run%s-test' % (savedir, prefix, run_id))
@@ -77,7 +77,7 @@ x0 = [-80, 200, 20, 500, -40, 500, -80, 500] * (n_steps // 4)
 if args.debug:
     #import timeit
     #print('Single score evaluation time: %s s' \
-    #    % (timeit.timeit(lambda: score(x0), number=10) / 10.))
+    #    % (timeit.timeit(lambda: design(x0), number=10) / 10.))
     import cProfile
     import pstats
     fname = 'design-lsa-profile.prof'
@@ -109,7 +109,7 @@ with open('%s/%s-run%s.out' % (savedir, prefix, run_id), 'w') as f:
     f.write('\np_evaluate_file = "' + p_evaluate_file + '"')
     f.write('\nn_steps = ' + str(n_steps))
     f.write('\ndt = ' + str(dt))
-    f.write('\ncriterion = ' + str(criterion))
+    f.write('\ncriterion = ' + str(args.criterion))
     f.write('\nseed_id = ' + str(seed_id))
     f.write('\nfit_seed = ' + str(fit_seed))
     f.write('\nProtocol lower bound:\n    ')
@@ -134,9 +134,9 @@ for _ in range(N):
     print('x0: ', x0)
 
     # Try it with x0
-    print('Score at x0:', score(x0))
+    print('Score at x0:', design(x0))
     for _ in range(3):
-        assert(score(x0) == score(x0))
+        assert(design(x0) == design(x0))
     
     opt = pints.OptimisationController(
             design,

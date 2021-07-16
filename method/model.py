@@ -315,6 +315,7 @@ class VCModel(pints.ForwardModel, pyoed.ForwardModel):
         self.dt = dt
         self._vhold = vhold
         self._n_steps = n_steps
+        self._voltage_name = model_voltage[self._model_file_name]
 
         # maximum time allowed
         self.max_evaluation_time = max_evaluation_time
@@ -328,10 +329,10 @@ class VCModel(pints.ForwardModel, pyoed.ForwardModel):
         for ion_var, ion_conc in model_ion[self._model_file_name]:
             self._fix_concentration(self._model, ion_var, ion_conc)
         # Detach voltage for voltage clamp(?)
-        model_v = self._model.get('membrane.V')
+        model_v = self._model.get(self._voltage_name)
         model_v.demote()
         model_v.set_rhs(self._vhold)
-        self._model.get('engine.pace').set_binding(None)
+        self._model.get(model_pace[self._model_file_name]).set_binding(None)
         model_v.set_binding('pace')
 
         # Create pre-pacing protocol
@@ -385,7 +386,7 @@ class VCModel(pints.ForwardModel, pyoed.ForwardModel):
     def n_design_variables(self):
         return self._n_steps * 2
 
-    def design(variables):
+    def design(self, variables):
         self.set_voltage_protocol(variables)
 
     def simulate(self, parameter, times=None, downsample=None,
@@ -458,8 +459,6 @@ class VCModel(pints.ForwardModel, pyoed.ForwardModel):
         #           can be used as a capacitive filter, or to make the fitting
         #           harder
         protocol = myokit.Protocol()
-        if '-old' in self._model_file_name:
-            p = np.array(p) * 1e-3
         duration = 0
         for i in range(len(p) // 2):
             protocol.add_step(p[2 * i], p[2 * i + 1])
@@ -477,9 +476,6 @@ class VCModel(pints.ForwardModel, pyoed.ForwardModel):
         # prt_mask: (numpy) mask function that remove part of the measurement;
         #           can be used as a capacitive filter, or to make the fitting
         #           harder
-        if '-old' in self._model_file_name:
-            v = v * 1e-3
-            t = t * 1e-3
         self.simulation2.set_fixed_form_protocol(
             t, v  # ms, mV
         )
@@ -533,13 +529,13 @@ class VCModel(pints.ForwardModel, pyoed.ForwardModel):
             p = Timeout(self.max_evaluation_time)
             d = self.simulation2.run(np.max(times) + 0.02,
                 log_times=times,
-                log=['membrane.V'],
+                log=[self._voltage_name],
                 progress=p,
                 ).npview()
             del(p)
         except (myokit.SimulationError, myokit.SimulationCancelledError):
-            d = {'membrane.V': np.ones(times.shape) * float('inf')}
-        return d['membrane.V']
+            d = {self._voltage_name: np.ones(times.shape) * float('inf')}
+        return d[self._voltage_name]
 
 
 class BootstrapVCModel(pints.ForwardModel):

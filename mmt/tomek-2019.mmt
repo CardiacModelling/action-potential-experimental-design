@@ -417,6 +417,8 @@ INaCa_i = (1 - INaCa_fractionSS) * Gncx * allo_i * (physical_constants.zna * Jnc
     in [A/F]
 INaCa_ss = INaCa_fractionSS * Gncx * allo_ss * (physical_constants.zna * JncxNa_ss + physical_constants.zca * JncxCa_ss)
     in [A/F]
+INaCa = INaCa_i + INaCa_ss
+    in [A/F]
 JncxCa_i = E2_i * k2_i - E1_i * k1_i
     in [mM/ms]
 JncxCa_ss = E2_ss * k2_ss - E1_ss * k1_ss
