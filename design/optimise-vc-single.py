@@ -36,6 +36,8 @@ parser = argparse.ArgumentParser('OED for VC experiments.')
 parser.add_argument('-d', '--design', type=str,
     choices=design_list.keys(), help='Design for OED.')
 parser.add_argument('-l', '--model_file', help='A mmt model file.')
+parser.add_argument('-n', '--n_optim', type=int, default=3,
+    help='Number of optimisation repeats.')
 parser.add_argument('--debug', action='store_true')
 args = parser.parse_args()
 
@@ -151,9 +153,9 @@ with open('%s/%s-run%s.out' % (savedir, prefix, run_id), 'w') as f:
 # Optimise design
 params, scores = [], []
 
-N = 3
+args.n_optim = 3
 
-for _ in range(N):
+for _ in range(args.n_optim):
     # Get x0
     need_x0 = True
     while need_x0:
@@ -199,7 +201,7 @@ scores = np.asarray(scores)[order]
 params = np.asarray(params)[order]
 
 # Show results
-bestn = min(3, N)
+bestn = min(5, args.n_optim)
 print('Best %d scores:' % bestn)
 for i in range(bestn):
     print(scores[i])
