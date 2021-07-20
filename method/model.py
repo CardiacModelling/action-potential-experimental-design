@@ -56,7 +56,8 @@ class CCModel(pints.ForwardModel, pyoed.ForwardModel):
     """
 
     def __init__(self, model_file, prepace=10, transform=None, dt=0.1,
-                 max_evaluation_time=5, norm=False):
+                 norm=False, parameters=parameters, n_steps=None,
+                 max_evaluation_time=60):
         """
         # model_file: mmt model file for myokit; main units: mV, ms, pA.
         # prepace: number of pre-pace before recording the simulated AP.
@@ -71,6 +72,7 @@ class CCModel(pints.ForwardModel, pyoed.ForwardModel):
         print('Initialising model %s...' % self._model_file_name)
         self._prepace = prepace
         self.dt = dt
+        self._n_steps = n_steps
         #self._stimulate = stimulate
         #self._stim_seq = stim_seq
         self.transform = transform
@@ -86,6 +88,10 @@ class CCModel(pints.ForwardModel, pyoed.ForwardModel):
         self.presimulation.set_max_step_size(1e-1)  # ms
         # self.simulation.set_tolerance(1e-8, 1e-10)
         self.simulation.set_max_step_size(1e-1)  # ms
+
+        ## Set up patch clamp
+        #for ion_var, ion_conc in model_ion[self._model_file_name]:
+        #    self._fix_concentration(self._model, ion_var, ion_conc)
 
         # Set stimulus default level
         try:
