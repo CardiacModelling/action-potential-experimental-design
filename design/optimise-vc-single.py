@@ -153,8 +153,6 @@ with open('%s/%s-run%s.out' % (savedir, prefix, run_id), 'w') as f:
 # Optimise design
 params, scores = [], []
 
-args.n_optim = 3
-
 for _ in range(args.n_optim):
     # Get x0
     need_x0 = True

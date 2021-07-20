@@ -93,9 +93,6 @@ if args.debug:
     plt.savefig('%s/run%s-test' % (savedir, run_id))
     plt.close()
 
-# TODO...
-sys.close()
-
 # DEBUG: Time the evaluation of the design
 if args.debug:
     # import timeit
@@ -155,8 +152,6 @@ with open('%s/%s-run%s.out' % (savedir, prefix, run_id), 'w') as f:
 
 # Optimise design
 params, scores = [], []
-
-args.n_optim = 3
 
 for _ in range(args.n_optim):
     # Get x0
