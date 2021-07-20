@@ -212,7 +212,7 @@ class CCModel(pints.ForwardModel, pyoed.ForwardModel):
         try:
             # Log some beats
             p = Timeout(self.max_evaluation_time)
-            d = self.simulation.run(np.max(times)+1e-2, 
+            d = self.simulation.run(np.max(self._times)+1e-2,
                 log_times=self._times,
                 log=[self._voltage_name] + extra_log,
                 progress=p,
