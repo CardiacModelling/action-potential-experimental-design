@@ -53,11 +53,11 @@ print('Seed ID: ', seed_id)
 # Design settings
 if 'LSA' in args.design:
     transform = None
-    h = 1e-3 # TODO
+    h = 1e-3
     default_param = np.ones(len(m.parameters))
 elif 'GSA' in args.design or 'Shannon' in args.design:
     transform = np.exp
-    n_samples = 1024 # TODO
+    n_samples = 1024
     logp_lower = [-2] * len(m.parameters)  # maybe +/-3
     logp_upper = [2] * len(m.parameters)
 
@@ -72,9 +72,15 @@ boundaries = pints.RectangularBoundaries(lower, upper)
 # Create design
 d, c = design_list[args.design]
 if 'LSA' in args.design:
-    design = d(model, default_param, criterion=c)
+    method = pyoed.CentralDifferenceSensitivity
+    method_kw = dict(h=h)
+    design = d(model, default_param, criterion=c, method=method,
+               method_kw=method_kw)
 elif 'GSA' in args.design:
-    design = d(model, np.array([logp_lower, logp_upper]).T, criterion=c)
+    method = pyoed.SobolFirstOrderSensitivity
+    method_kw = dict(n_samples=n_samples)
+    b = np.array([logp_lower, logp_upper]).T
+    design = d(model, b, criterion=c, method=method, method_kw=method_kw)
 elif 'Shannon' in args.design:
     design = None
     raise NotImplementedError
@@ -103,7 +109,7 @@ if args.debug:
     fname = savedir + '/design-profile.prof'
     print('Benchmarking design.__call__')
     # Testing protocol parameters
-    x0 = [-80, 200, 20, 500, -40, 500, -80, 500] * (n_steps // 4)
+    x0 = [1, 1000, 2, 800] * 5
     cProfile.run('x = design(x0)', fname)
     p = pstats.Stats(fname)
     p.strip_dirs()

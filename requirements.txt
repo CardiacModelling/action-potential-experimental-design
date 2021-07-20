@@ -1,3 +1,3 @@
 pints==0.3.0
 myokit==1.32.0
-git+https://github.com/chonlei/pyoed.git@4aa22323276a0de3e81ffd8b2441d71b5426450f
+git+https://github.com/chonlei/pyoed.git@bc4963cc26bae1512283edebd85a91c71a3eb19d
