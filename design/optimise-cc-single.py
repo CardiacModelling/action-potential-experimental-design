@@ -190,7 +190,7 @@ for _ in range(args.n_optim):
             params.append(p)
             scores.append(s)
             print('Found solution:' )
-            print('Voltage (mV)\tDuration (ms)' )
+            print('Stimulus ampitude (x-80A/F)\tHolding duration (ms)' )
             for i in range(n_steps):
                 print(pints.strfloat(p[2 * i]) + '\t' +
                         pints.strfloat(p[2 * i + 1]))
@@ -224,7 +224,7 @@ for i in range(bestn):
     p = obtained_parameters[i]
     fn = '%s/%s-run%s-rank%s.txt' % (savedir, prefix, run_id, i)
     with open(fn, 'w') as f:
-        f.write('# Voltage [mV]\tDuration [ms]\n')
+        f.write('# Stimulus ampitude [x-80A/F]\tHolding duration [ms]\n')
         for i in range(len(p) // 2):
             f.write(pints.strfloat(p[2 * i]) \
                     + '\t' \
