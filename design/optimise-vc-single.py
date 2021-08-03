@@ -2,7 +2,6 @@
 """
 # Experimental esign for voltage-clamp experiments.
 """
-from __future__ import print_function
 import sys
 sys.path.append('../method')
 import os
@@ -84,16 +83,16 @@ elif 'GSA' in args.design:
 elif 'Shannon' in args.design:
     design = None
     raise NotImplementedError
-    
+
 p_evaluate = np.copy(design._method.ask())
 
 # DEBUG: Test parameter samples with a simple protocol
 if args.debug:
     test_prt = [-80, 200, 20, 500, -40, 500, -80, 200]
     test_t = np.arange(0, np.sum(test_prt[1::2]), dt)
-    model.set_voltage_protocol(test_prt)
+    model.design(test_prt)
     for p in p_evaluate:
-        plt.plot(test_t, model.simulate(p, times=test_t))
+        plt.plot(test_t, model.simulate(p))
     plt.xlabel('Times (ms)')
     plt.ylabel('Current (pA)')
     plt.savefig('%s/run%s-test' % (savedir, run_id))
