@@ -83,7 +83,7 @@ cipa_2017_current = {
     'ikr.s': 'IKr.IKr',
     'iks.s': 'IKs.IKs',
     'ito.s': 'Ito.Ito',
-    'inaca.s': 'INaCa.INaCa',
+    'inaca.s': 'INaCa_i.INaCa',
     'ik1.s': 'IK1.IK1',
     'inak.s': 'INaK.INaK',
 }
@@ -166,7 +166,7 @@ cipa_2017_conductance = {
     'ikr.s': 'IKr.GKr',
     'iks.s': 'IKs.GKs',
     'ito.s': 'Ito.Gto',
-    'inaca.s': 'INaCa.Gncx',
+    'inaca.s': 'INaCa_i.Gncx',
     'ik1.s': 'IK1.GK1',
     'inak.s': 'INaK.Pnak',
 }

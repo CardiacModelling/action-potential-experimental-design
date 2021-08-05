@@ -382,7 +382,7 @@ q63 = 5.682
 #    in [mS/uF]
 #GKs_b =  6.35800000000000080e-3 [mS/uF]
 #    in [mS/uF]
-GKs_b =  6.35800000000000080e-3 [mS/uF]  # endo
+GKs = 6.35800000000000080e-3 [mS/uF]  # endo
     in [mS/uF]
     oxmeta: membrane_slow_delayed_rectifier_potassium_current_conductance
 IKs = GKs * KsCa * xs1 * xs2 * (membrane.v - reversal_potentials.EKs)
@@ -509,6 +509,8 @@ INaCa_i = 0.8 * Gncx * allo_i * (physical_constants.zna * JncxNa_i + physical_co
 INaCa_ss = 0.2 * Gncx * allo_ss * (physical_constants.zna * JncxNa_ss + physical_constants.zca * JncxCa_ss)
     in [A/F]
     oxmeta: membrane_sodium_calcium_exchanger_dyadic_space_current
+INaCa = INaCa_i + INaCa_ss
+    in [A/F]
 JncxCa_i = E2_i * k2_i - E1_i * k1_i
     in [mM/ms]
 JncxCa_ss = E2_ss * k2_ss - E1_ss * k1_ss
