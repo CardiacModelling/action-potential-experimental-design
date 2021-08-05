@@ -34,7 +34,7 @@ design_list = {
 parser = argparse.ArgumentParser('OED for VC experiments.')
 parser.add_argument('-d', '--design', type=str,
     choices=design_list.keys(), help='Design for OED.')
-parser.add_argument('-l', '--model_file_list', nargs='+',
+parser.add_argument('-l', '--model_file_list',
     help='a txt file containing a list of mmt file names.')
 parser.add_argument('-n', '--n_optim', type=int, default=3,
     help='Number of optimisation repeats.')
@@ -43,7 +43,7 @@ args = parser.parse_args()
 
 file_name = os.path.splitext(os.path.basename(args.model_file_list))[0]
 
-with open(args.model_file_list[0], 'r') as f:
+with open(args.model_file_list, 'r') as f:
     ls = f.readlines()
 args.model_file_list = [l.strip() for l in ls]
 
