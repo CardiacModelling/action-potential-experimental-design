@@ -96,9 +96,9 @@ elif 'GSA' in args.design:
 elif 'Shannon' in args.design:
     design = None
     raise NotImplementedError
-design = pyoed.CombineMeasureDesign(design_list, aggregate=np.mean)
+design = pyoed.CombineDesignMeasure(design_list, aggregate=np.mean)
 
-p_evaluate = np.copy(design._method.ask())
+p_evaluate = np.copy(design._measures[0]._method.ask())
 
 # DEBUG: Test parameter samples with a simple protocol
 if args.debug:
