@@ -310,7 +310,7 @@ dot(D) = 0
 #    in [mS/uF]
 #GKr_b =  4.65854545454545618e-2 [mS/uF]
 #    in [mS/uF]
-GKr_b =  4.65854545454545618e-2 [mS/uF]  # endo
+GKr =  4.65854545454545618e-2 [mS/uF]  # endo
     in [mS/uF]
     oxmeta: membrane_rapid_delayed_rectifier_potassium_current_conductance
 dot(IC1) = -(A11 * exp(B11 * membrane.v) * IC1 * exp((Temp - 20) * log(q11) / 10) - A21 * exp(B21 * membrane.v) * IC2 * exp((Temp - 20) * log(q21) / 10)) + A51 * exp(B51 * membrane.v) * C1 * exp((Temp - 20) * log(q51) / 10) - A61 * exp(B61 * membrane.v) * IC1 * exp((Temp - 20) * log(q61) / 10)
