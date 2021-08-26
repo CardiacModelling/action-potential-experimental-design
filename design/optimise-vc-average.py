@@ -12,6 +12,9 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import pints
 import pyoed
+import gc
+gc.enable()
+# gc.set_debug(gc.DEBUG_LEAK)
 
 import model as m
 
@@ -193,7 +196,8 @@ for _ in range(args.n_optim):
             x0,
             boundaries=boundaries,
             method=pints.CMAES)
-    opt.set_max_iterations(None)
+    opt.optimiser().set_population_size(30)
+    opt.set_max_iterations(1000)
     opt.set_max_unchanged_iterations(iterations=100, threshold=1e-3)
     opt.set_parallel(True)
 
@@ -213,6 +217,8 @@ for _ in range(args.n_optim):
         import traceback
         traceback.print_exc()
         raise RuntimeError('Not here...')
+    del(opt)
+    gc.collect()
 
 # Order from best to worst
 order = np.argsort(scores)  # (use [::-1] for LL)
@@ -233,8 +239,8 @@ print(scores[-1])
 #
 # Store bestn results
 #
-obtained_scores = scores[:3]
-obtained_parameters = params[:3]
+obtained_scores = scores[:bestn]
+obtained_parameters = params[:bestn]
 for i in range(bestn):
     p = obtained_parameters[i]
     fn = '%s/%s-run%s-rank%s.txt' % (savedir, prefix, run_id, i)
