@@ -246,6 +246,10 @@ class CCModel(pints.ForwardModel, pyoed.ForwardModel):
         # return the name of the parameters
         return self.parameters
 
+    def times(self):
+        # Return the time series for the currently set stimulus protocol.
+        return self._times
+
     def normalise(self, v):
         # Do whatever fancy normalisation here
         # For example to mimic optical mapping data
@@ -320,9 +324,9 @@ class VCModel(pints.ForwardModel, pyoed.ForwardModel):
         # Create simulation protocol
         self.simulation2 = myokit.Simulation(self._model)
         p = [self._vhold, 100] * 3 * len(self.current)
-        self.set_voltage_protocol(p)
-        self.simulation2.set_tolerance(1e-6, 1e-8)
-        self.simulation2.set_max_step_size(1e-2)  # ms
+        self.design(p)
+        # self.simulation2.set_tolerance(1e-6, 1e-8)
+        # self.simulation2.set_max_step_size(1e-2)  # ms
 
         # Create a order-matched conductance list
         try:
@@ -360,7 +364,22 @@ class VCModel(pints.ForwardModel, pyoed.ForwardModel):
         return self._n_steps * 2
 
     def design(self, variables):
-        self.set_voltage_protocol(variables)
+        # self.set_voltage_protocol(variables)
+        # Assume protocol p is
+        # [step_1_voltage, step_1_duration, step_2_voltage, ...]
+        # prt_mask: (numpy) mask function that remove part of the measurement;
+        #           can be used as a capacitive filter, or to make the fitting
+        #           harder
+        protocol = myokit.Protocol()
+        duration = 0
+        p = variables
+        for i in range(len(p) // 2):
+            protocol.add_step(p[2 * i], p[2 * i + 1])
+            duration += p[2 * i + 1]
+        self.simulation2.set_protocol(protocol)
+        del(protocol)
+        self._times = np.arange(0, duration, self.dt)
+        self.simulated_currents = self._simulate_protocol(self._times)
 
     def simulate(self, parameter, times=None, downsample=None,
                  multi_input=False):
