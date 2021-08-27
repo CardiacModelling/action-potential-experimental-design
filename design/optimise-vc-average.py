@@ -94,8 +94,9 @@ elif 'GSA' in args.design:
     method_kw = dict(n_samples=n_samples)
     b = np.array([logp_lower, logp_upper]).T
     for model in model_list:
-        design_list.append(
-            d(model, b, criterion=c, method=method, method_kw=method_kw))
+        design = d(model, b, criterion=c, method=method, method_kw=method_kw)
+        design.set_n_batches(int(n_samples / 2**8))
+        design_list.append(design)
 elif 'Shannon' in args.design:
     design = None
     raise NotImplementedError

@@ -12,6 +12,8 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import pints
 import pyoed
+import gc
+gc.enable()
 
 import model as m
 
@@ -97,6 +99,7 @@ elif 'GSA' in args.design:
     method_kw = dict(n_samples=n_samples)
     b = np.array([logp_lower, logp_upper]).T
     design = d(model, b, criterion=c, method=method, method_kw=method_kw)
+    design.set_n_batches(int(n_samples / 2**8))
 elif 'Shannon' in args.design:
     design = None
     raise NotImplementedError
@@ -215,6 +218,8 @@ for _ in range(args.n_optim):
         import traceback
         traceback.print_exc()
         raise RuntimeError('Not here...')
+    del(opt)
+    gc.collect()
 
 # Order from best to worst
 order = np.argsort(scores)  # (use [::-1] for LL)
