@@ -3,7 +3,7 @@
 # Experimental esign for voltage-clamp experiments.
 """
 import sys
-sys.path.append('../method')
+sys.path.append('..')
 import os
 import argparse
 import numpy as np
@@ -15,7 +15,7 @@ import pyoed
 import gc
 gc.enable()
 
-import model as m
+import method.model
 
 prefix = 'opt-prt'
 n_steps = 20  # number of steps of the protocol
@@ -72,15 +72,20 @@ print('Seed ID: ', seed_id)
 if 'LSA' in args.design:
     transform = None
     h = 1e-3
-    default_param = np.ones(len(m.parameters))
+    default_param = np.ones(len(method.model.parameters))
 elif 'GSA' in args.design or 'Shannon' in args.design:
     transform = np.exp
     n_samples = 1024
-    logp_lower = [-2] * len(m.parameters)  # maybe +/-3
-    logp_upper = [2] * len(m.parameters)
+    logp_lower = [-2] * len(method.model.parameters)  # maybe +/-3
+    logp_upper = [2] * len(method.model.parameters)
 
 # Create model
-model = m.VCModel(args.model_file, transform=transform, dt=dt, n_steps=n_steps)
+model = method.model.VCModel(
+    args.model_file,
+    transform=transform,
+    dt=dt,
+    n_steps=n_steps
+)
 
 # Protocol parameter: [step_1_voltage, step_1_duration, step_2..., step3...]
 lower = [-120, 50] * n_steps
@@ -178,7 +183,7 @@ with open('%s/%s-run%s.out' % (savedir, prefix, run_id), 'w') as f:
 # Optimise design
 params, scores = [], []
 
-for _ in range(args.n_optim):
+for i_optim in range(args.n_optim):
     # Get x0
     need_x0 = True
     while need_x0:
@@ -218,45 +223,43 @@ for _ in range(args.n_optim):
         import traceback
         traceback.print_exc()
         raise RuntimeError('Not here...')
+
+    if args.tmp:
+        fn = '%s/%s-run%s-%s.txt' % (savedir, prefix, run_id, i_optim)
+        method.utils.save_protocol(fn, p)
+        gn = '%s/%s-score-run%s-%s.txt' % (savedir, prefix, run_id, i_optim)
+        np.savetxt(gn, np.asarray(s).reshape(-1))
+
     del(opt)
     gc.collect()
 
-# Order from best to worst
-order = np.argsort(scores)  # (use [::-1] for LL)
-scores = np.asarray(scores)[order]
-params = np.asarray(params)[order]
+if not args.tmp:
+    # Order from best to worst
+    order = np.argsort(scores)  # (use [::-1] for LL)
+    scores = np.asarray(scores)[order]
+    params = np.asarray(params)[order]
 
-# Show results
-if args.tmp:
-    bestn = args.n_optim
-else:
+    # Show results
     bestn = min(5, args.n_optim)
-print('Best %d scores:' % bestn)
-for i in range(bestn):
-    print(scores[i])
-print('Mean & std of logposterior:')
-print(np.mean(scores))
-print(np.std(scores))
-print('Worst logposterior:')
-print(scores[-1])
+    print('Best %d scores:' % bestn)
+    for i in range(bestn):
+        print(scores[i])
+    print('Mean & std of logposterior:')
+    print(np.mean(scores))
+    print(np.std(scores))
+    print('Worst logposterior:')
+    print(scores[-1])
 
-#
-# Store bestn results
-#
-obtained_scores = scores[:bestn]
-obtained_parameters = params[:bestn]
-for i in range(bestn):
-    p = obtained_parameters[i]
-    fn = '%s/%s-run%s-rank%s.txt' % (savedir, prefix, run_id, i)
-    with open(fn, 'w') as f:
-        f.write('# Voltage [mV]\tDuration [ms]\n')
-        for i in range(len(p) // 2):
-            f.write(pints.strfloat(p[2 * i]) \
-                    + '\t' \
-                    + pints.strfloat(p[2 * i + 1]) \
-                    + '\n' \
-                    )
-    gn = '%s/%s-score-run%s-rank%s.txt' % (savedir, prefix, run_id, i)
-    np.savetxt(gn, np.asarray(obtained_scores[i]).reshape(-1))
+
+    #
+    # Store bestn results
+    #
+    obtained_scores = scores[:bestn]
+    obtained_parameters = params[:bestn]
+    for i in range(bestn):
+        fn = '%s/%s-run%s-rank%s.txt' % (savedir, prefix, run_id, i)
+        method.utils.save_protocol(fn, obtained_parameters[i])
+        gn = '%s/%s-score-run%s-rank%s.txt' % (savedir, prefix, run_id, i)
+        np.savetxt(gn, np.asarray(obtained_scores[i]).reshape(-1))
 
 print('Done')

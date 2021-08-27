@@ -7,7 +7,7 @@ import pints
 import pyoed
 import myokit
 
-from default import *
+from method.default import *
 
 vhold = -80  # mV
 
