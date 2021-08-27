@@ -37,12 +37,29 @@ parser.add_argument('-d', '--design', type=str,
 parser.add_argument('-l', '--model_file', help='A mmt model file.')
 parser.add_argument('-n', '--n_optim', type=int, default=3,
     help='Number of optimisation repeats.')
+parser.add_argument('-r', '--repeat_id', type=int, default=0,
+    help='Repeat ID for `--tmp`, splitting a full run into multiple runs.')
+parser.add_argument('-p', '--parallel', type=int, default=-1,
+    help='Enables/disables parallel evaluation for PINTS.' \
+	 + ' Set -1 to use all CPU. Set 0 to disable parallel evaluation.')
+parser.add_argument('--tmp', action='store_true',
+    help='Output to tmp folder before postprocessing.')
 parser.add_argument('--debug', action='store_true')
 args = parser.parse_args()
 
 model_name = os.path.splitext(os.path.basename(args.model_file))[0]
 
+if args.parallel == -1:
+    set_parallel = True
+else:
+    set_parallel = args.parallel
+
 savedir = './out/' + args.design + '-vc-' + model_name
+if args.tmp:
+    savedir += '-tmp'
+    seed_id += args.repeat_id  # Each repeat run has a different seed.
+    run_id = str(run_id) + '-re' + str(args.repeat_id)
+
 if not os.path.isdir(savedir):
     os.makedirs(savedir)
 
@@ -177,9 +194,10 @@ for _ in range(args.n_optim):
             x0,
             boundaries=boundaries,
             method=pints.CMAES)
-    opt.set_max_iterations(None)
+    opt.optimiser().set_population_size(30)
+    opt.set_max_iterations(1000)
     opt.set_max_unchanged_iterations(iterations=100, threshold=1e-3)
-    opt.set_parallel(True)
+    opt.set_parallel(set_parallel)
 
     # Run optimisation
     try:
@@ -204,7 +222,10 @@ scores = np.asarray(scores)[order]
 params = np.asarray(params)[order]
 
 # Show results
-bestn = min(5, args.n_optim)
+if args.tmp:
+    bestn = args.n_optim
+else:
+    bestn = min(5, args.n_optim)
 print('Best %d scores:' % bestn)
 for i in range(bestn):
     print(scores[i])
@@ -217,8 +238,8 @@ print(scores[-1])
 #
 # Store bestn results
 #
-obtained_scores = scores[:3]
-obtained_parameters = params[:3]
+obtained_scores = scores[:bestn]
+obtained_parameters = params[:bestn]
 for i in range(bestn):
     p = obtained_parameters[i]
     fn = '%s/%s-run%s-rank%s.txt' % (savedir, prefix, run_id, i)
@@ -230,5 +251,7 @@ for i in range(bestn):
                     + pints.strfloat(p[2 * i + 1]) \
                     + '\n' \
                     )
+    gn = '%s/%s-score-run%s-rank%s.txt' % (savedir, prefix, run_id, i)
+    np.savetxt(gn, np.asarray(obtained_scores[i]).reshape(-1))
 
 print('Done')
