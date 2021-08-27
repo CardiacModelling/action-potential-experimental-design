@@ -75,7 +75,7 @@ if 'LSA' in args.design:
     default_param = np.ones(len(method.model.parameters))
 elif 'GSA' in args.design or 'Shannon' in args.design:
     transform = np.exp
-    n_samples = 1024
+    n_samples = 512
     logp_lower = [-2] * len(method.model.parameters)  # maybe +/-3
     logp_upper = [2] * len(method.model.parameters)
 

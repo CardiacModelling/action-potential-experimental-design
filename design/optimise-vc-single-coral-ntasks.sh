@@ -5,7 +5,7 @@
 #SBATCH --tasks-per-node        2
 #SBATCH --cpus-per-task         24
 #SBATCH --time                  100:00:00
-#SBATCH --mem                   60G
+#SBATCH --mem                   80G
 #SBATCH --job-name              OED-GSA-A
 #SBATCH --output                log/OED-GSA-A.%j.out
 #SBATCH --error                 log/OED-GSA-A.%j.err
@@ -49,7 +49,7 @@ do
 	# NOTE: We are not doing MPI here, so it takes only 1 task, but needs more than 1 CPU to do multiprocessing.
 	#       https://login.scg.stanford.edu/faqs/cores/#nodes-vs-tasks-vs-cpus-vs-cores
     echo "Logging to ${LOG}/${DESIGN}_${MODEL}_n${N}_x${x}.log"
-	srun --exclusive --ntasks=1 --cpus-per-task=${SLURM_CPUS_PER_TASK} --mem=30G python -u optimise-vc-single.py -d ${DESIGN} -l ${PATH2MODEL} -n ${N} -r ${x} -p ${SLURM_CPUS_PER_TASK} --tmp > ${LOG}/${DESIGN}_${MODEL}_n${N}_x${x}.log &
+	srun --exclusive --ntasks=1 --cpus-per-task=${SLURM_CPUS_PER_TASK} --mem=40G python -u optimise-vc-single.py -d ${DESIGN} -l ${PATH2MODEL} -n ${N} -r ${x} -p ${SLURM_CPUS_PER_TASK} --tmp > ${LOG}/${DESIGN}_${MODEL}_n${N}_x${x}.log &
 done
 
 wait
