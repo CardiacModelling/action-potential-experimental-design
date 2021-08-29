@@ -15,6 +15,9 @@ import pyoed
 import gc
 gc.enable()
 
+import psutil
+print(psutil.virtual_memory())
+
 import method.model
 
 prefix = 'opt-prt'
@@ -44,6 +47,8 @@ parser.add_argument('-r', '--repeat_id', type=int, default=0,
 parser.add_argument('-p', '--parallel', type=int, default=-1,
     help='Enables/disables parallel evaluation for PINTS.' \
 	 + ' Set -1 to use all CPU. Set 0 to disable parallel evaluation.')
+parser.add_argument('--rand_x0', action='store_true',
+    help='Randomly initialise the optimisation starting point.')
 parser.add_argument('--tmp', action='store_true',
     help='Output to tmp folder before postprocessing.')
 parser.add_argument('--debug', action='store_true')
@@ -91,6 +96,7 @@ model = method.model.VCModel(
 lower = [-120, 50] * n_steps
 upper = [60, 2e3] * n_steps
 boundaries = pints.RectangularBoundaries(lower, upper)
+transformation = pints.RectangularBoundariesTransformation(boundaries)
 
 # Create design
 d, c = design_list[args.design]
@@ -99,12 +105,14 @@ if 'LSA' in args.design:
     method_kw = dict(h=h)
     design = d(model, default_param, criterion=c, method=method,
                method_kw=method_kw)
+    design.set_maximum_error(1e16)
 elif 'GSA' in args.design:
     method = pyoed.SobolFirstOrderSensitivity
     method_kw = dict(n_samples=n_samples)
     b = np.array([logp_lower, logp_upper]).T
     design = d(model, b, criterion=c, method=method, method_kw=method_kw)
-    design.set_n_batches(int(n_samples / 2**8))
+    design.set_n_batches(int(n_samples / 2**6))
+    design.set_maximum_error(1e16)
 elif 'Shannon' in args.design:
     design = None
     raise NotImplementedError
@@ -171,6 +179,7 @@ with open('%s/%s-run%s.out' % (savedir, prefix, run_id), 'w') as f:
     f.write('\np_evaluate_file = "' + p_evaluate_file + '"')
     f.write('\nn_steps = ' + str(n_steps))
     f.write('\ndt = ' + str(dt))
+    f.write('\nrand_x0 = ' + str(args.rand_x0))
     f.write('\nseed_id = ' + str(seed_id))
     f.write('\nfit_seed = ' + str(fit_seed))
     f.write('\nProtocol lower bound:\n    ')
@@ -185,11 +194,14 @@ params, scores = [], []
 
 for i_optim in range(args.n_optim):
     # Get x0
-    need_x0 = True
-    while need_x0:
-        x0 = boundaries.sample(1)[0]
-        if np.isfinite(design(x0)):
-            need_x0 = False
+    if args.rand_x0:
+        need_x0 = True
+        while need_x0:
+            x0 = boundaries.sample(1)[0]
+            if np.isfinite(design(x0)):
+                need_x0 = False
+    else:
+        x0 = [-80, 200, 20, 500, -40, 500, -80, 500] * (n_steps // 4)
     print('x0: ', x0)
 
     # Try it with x0
@@ -200,8 +212,14 @@ for i_optim in range(args.n_optim):
     opt = pints.OptimisationController(
             design,
             x0,
+            sigma0=[5, 50] * n_steps,  # Don't let it make a big jump first.
             boundaries=boundaries,
+            transformation=transformation,
             method=pints.CMAES)
+    # if set_parallel > opt.optimiser().suggested_population_size():
+    #     print('Suggested population size was:',
+    #           opt.optimiser().suggested_population_size())
+    #     opt.optimiser().set_population_size(set_parallel)
     opt.optimiser().set_population_size(30)
     opt.set_max_iterations(1000)
     opt.set_max_unchanged_iterations(iterations=100, threshold=1e-3)

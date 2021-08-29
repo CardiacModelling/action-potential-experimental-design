@@ -39,7 +39,7 @@ class Timeout(myokit.ProgressReporter):
     def __init__(self, max_time):
         self.max_time = float(max_time)
     def enter(self, msg=None):
-        self.b = myokit.Benchmarker()
+        self.b = myokit.tools.Benchmarker()
     def exit(self):
         pass
     def update(self, progress):
@@ -318,8 +318,11 @@ class VCModel(pints.ForwardModel, pyoed.ForwardModel):
         self.simulation1 = myokit.Simulation(self._model, protocol)
 
         # Init states
+        # NOTE: OK to pre-compute the init states for VC when we change only
+        #       the maximum conductance of the model!
         self.default_init_state = self.simulation1.state()
-        self.init_state = self.default_init_state
+        self.simulation1.pre(100)
+        self.set_init_state(self.simulation1.state())
 
         # Create simulation protocol
         self.simulation2 = myokit.Simulation(self._model)
@@ -484,11 +487,8 @@ class VCModel(pints.ForwardModel, pyoed.ForwardModel):
         return self._times
 
     def _simulate_protocol(self, times):
-        self.simulation1.reset()
         self.simulation2.reset()
-        self.simulation1.set_state(self.init_state)
-        self.simulation1.pre(100)
-        self.simulation2.set_state(self.simulation1.state())
+        self.simulation2.set_state(self.init_state)
 
         try:
             p = Timeout(self.max_evaluation_time)
@@ -511,11 +511,8 @@ class VCModel(pints.ForwardModel, pyoed.ForwardModel):
         return self.current
 
     def voltage(self, times):
-        self.simulation1.reset()
         self.simulation2.reset()
-        self.simulation1.set_state(self.init_state)
-        self.simulation1.pre(100)
-        self.simulation2.set_state(self.simulation1.state())
+        self.simulation2.set_state(self.init_state)
 
         try:
             p = Timeout(self.max_evaluation_time)
