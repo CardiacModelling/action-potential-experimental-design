@@ -3,7 +3,7 @@
 # Experimental esign for voltage-clamp experiments with model averaging.
 """
 import sys
-sys.path.append('../method')
+sys.path.append('..')
 import os
 import argparse
 import numpy as np
@@ -16,11 +16,15 @@ import gc
 gc.enable()
 # gc.set_debug(gc.DEBUG_LEAK)
 
-import model as m
+import psutil
+print(psutil.virtual_memory())
+
+import method.model
+import method.utils as utils
 
 prefix = 'opt-prt'
 n_steps = 20  # number of steps of the protocol
-dt = 0.1  # ms
+dt = 1  # ms
 seed_id = 101  # random seed
 run_id = 0
 
@@ -38,9 +42,18 @@ parser = argparse.ArgumentParser('OED for VC experiments.')
 parser.add_argument('-d', '--design', type=str,
     choices=design_list.keys(), help='Design for OED.')
 parser.add_argument('-l', '--model_file_list',
-    help='a txt file containing a list of mmt file names.')
+    help='A plain text file containing a list of mmt file names.')
 parser.add_argument('-n', '--n_optim', type=int, default=3,
     help='Number of optimisation repeats.')
+parser.add_argument('-r', '--repeat_id', type=int, default=0,
+    help='Repeat ID for `--tmp`, splitting a full run into multiple runs.')
+parser.add_argument('-p', '--parallel', type=int, default=-1,
+    help='Enables/disables parallel evaluation for PINTS.' \
+	 + ' Set -1 to use all CPU. Set 0 to disable parallel evaluation.')
+parser.add_argument('--rand_x0', action='store_true',
+    help='Randomly initialise the optimisation starting point.')
+parser.add_argument('--tmp', action='store_true',
+    help='Output to tmp folder before postprocessing.')
 parser.add_argument('--debug', action='store_true')
 args = parser.parse_args()
 
@@ -50,7 +63,17 @@ with open(args.model_file_list, 'r') as f:
     ls = f.readlines()
 args.model_file_list = [l.strip() for l in ls]
 
+if args.parallel == -1:
+    set_parallel = True
+else:
+    set_parallel = args.parallel
+
 savedir = './out/' + args.design + '-vc-' + file_name
+if args.tmp:
+    savedir += '-tmp'
+    seed_id += args.repeat_id  # Each repeat run has a different seed.
+    run_id = str(run_id) + '-re' + str(args.repeat_id)
+
 if not os.path.isdir(savedir):
     os.makedirs(savedir)
 
@@ -61,41 +84,42 @@ print('Seed ID: ', seed_id)
 if 'LSA' in args.design:
     transform = None
     h = 1e-3
-    default_param = np.ones(len(m.parameters))
+    default_param = np.ones(len(method.model.parameters))
 elif 'GSA' in args.design or 'Shannon' in args.design:
     transform = np.exp
-    n_samples = 1024
-    logp_lower = [-2] * len(m.parameters)  # maybe +/-3
-    logp_upper = [2] * len(m.parameters)
+    n_samples = 512
+    logp_lower = [-2] * len(method.model.parameters)  # maybe +/-3
+    logp_upper = [2] * len(method.model.parameters)
 
 # Create models
 model_list = []
 for model_file in args.model_file_list:
     model_list.append(
-        m.VCModel(model_file, transform=transform, dt=dt, n_steps=n_steps))
+        method.model.VCModel(model_file, transform=transform, dt=dt, n_steps=n_steps, max_evaluation_time=10,))
 
 # Protocol parameter: [step_1_voltage, step_1_duration, step_2..., step3...]
 lower = [-120, 50] * n_steps
 upper = [60, 2e3] * n_steps
 boundaries = pints.RectangularBoundaries(lower, upper)
+transformation = pints.RectangularBoundariesTransformation(boundaries)
 
 # Create design
 d, c = design_list[args.design]
 design_list = []
 if 'LSA' in args.design:
-    method = pyoed.CentralDifferenceSensitivity
+    sensitivity_method = pyoed.CentralDifferenceSensitivity
     method_kw = dict(h=h)
     for model in model_list:
         design_list.append(
-            d(model, default_param, criterion=c, method=method,
+            d(model, default_param, criterion=c, method=sensitivity_method,
               method_kw=method_kw))
 elif 'GSA' in args.design:
-    method = pyoed.SobolFirstOrderSensitivity
+    sensitivity_method = pyoed.SobolFirstOrderSensitivity
     method_kw = dict(n_samples=n_samples)
     b = np.array([logp_lower, logp_upper]).T
     for model in model_list:
-        design = d(model, b, criterion=c, method=method, method_kw=method_kw)
-        design.set_n_batches(int(n_samples / 2**8))
+        design = d(model, b, criterion=c, method=sensitivity_method, method_kw=method_kw)
+        design.set_n_batches(int(n_samples / 2**6))
         design_list.append(design)
 elif 'Shannon' in args.design:
     design = None
@@ -166,6 +190,7 @@ with open('%s/%s-run%s.out' % (savedir, prefix, run_id), 'w') as f:
     f.write('\np_evaluate_file = "' + p_evaluate_file + '"')
     f.write('\nn_steps = ' + str(n_steps))
     f.write('\ndt = ' + str(dt))
+    f.write('\nrand_x0 = ' + str(args.rand_x0))
     f.write('\nseed_id = ' + str(seed_id))
     f.write('\nfit_seed = ' + str(fit_seed))
     f.write('\nProtocol lower bound:\n    ')
@@ -178,13 +203,16 @@ with open('%s/%s-run%s.out' % (savedir, prefix, run_id), 'w') as f:
 # Optimise design
 params, scores = [], []
 
-for _ in range(args.n_optim):
+for i_optim in range(args.n_optim):
     # Get x0
-    need_x0 = True
-    while need_x0:
-        x0 = boundaries.sample(1)[0]
-        if np.isfinite(design(x0)):
-            need_x0 = False
+    if args.rand_x0:
+        need_x0 = True
+        while need_x0:
+            x0 = boundaries.sample(1)[0]
+            if np.isfinite(design(x0)):
+                need_x0 = False
+    else:
+        x0 = [-80, 200, 20, 500, -40, 500, -80, 500] * (n_steps // 4)
     print('x0: ', x0)
 
     # Try it with x0
@@ -195,12 +223,18 @@ for _ in range(args.n_optim):
     opt = pints.OptimisationController(
             design,
             x0,
-            boundaries=boundaries,
+            sigma0=[5, 50] * n_steps,  # Don't let it make a big jump first.
+            # boundaries=boundaries,  # transformation will handle the bounds.
+            transformation=transformation,
             method=pints.CMAES)
+    # if set_parallel > opt.optimiser().suggested_population_size():
+    #     print('Suggested population size was:',
+    #           opt.optimiser().suggested_population_size())
+    #     opt.optimiser().set_population_size(set_parallel)
     opt.optimiser().set_population_size(30)
     opt.set_max_iterations(1000)
     opt.set_max_unchanged_iterations(iterations=100, threshold=1e-3)
-    opt.set_parallel(True)
+    opt.set_parallel(set_parallel)
 
     # Run optimisation
     try:
@@ -218,40 +252,43 @@ for _ in range(args.n_optim):
         import traceback
         traceback.print_exc()
         raise RuntimeError('Not here...')
+
+    if args.tmp:
+        fn = '%s/%s-run%s-%s.txt' % (savedir, prefix, run_id, i_optim)
+        utils.save_protocol(fn, p)
+        gn = '%s/%s-score-run%s-%s.txt' % (savedir, prefix, run_id, i_optim)
+        np.savetxt(gn, np.asarray(s).reshape(-1))
+
     del(opt)
     gc.collect()
 
-# Order from best to worst
-order = np.argsort(scores)  # (use [::-1] for LL)
-scores = np.asarray(scores)[order]
-params = np.asarray(params)[order]
+if not args.tmp:
+    # Order from best to worst
+    order = np.argsort(scores)  # (use [::-1] for LL)
+    scores = np.asarray(scores)[order]
+    params = np.asarray(params)[order]
 
-# Show results
-bestn = min(5, args.n_optim)
-print('Best %d scores:' % bestn)
-for i in range(bestn):
-    print(scores[i])
-print('Mean & std of logposterior:')
-print(np.mean(scores))
-print(np.std(scores))
-print('Worst logposterior:')
-print(scores[-1])
+    # Show results
+    bestn = min(5, args.n_optim)
+    print('Best %d scores:' % bestn)
+    for i in range(bestn):
+        print(scores[i])
+    print('Mean & std of logposterior:')
+    print(np.mean(scores))
+    print(np.std(scores))
+    print('Worst logposterior:')
+    print(scores[-1])
 
-#
-# Store bestn results
-#
-obtained_scores = scores[:bestn]
-obtained_parameters = params[:bestn]
-for i in range(bestn):
-    p = obtained_parameters[i]
-    fn = '%s/%s-run%s-rank%s.txt' % (savedir, prefix, run_id, i)
-    with open(fn, 'w') as f:
-        f.write('# Voltage [mV]\tDuration [ms]\n')
-        for i in range(len(p) // 2):
-            f.write(pints.strfloat(p[2 * i]) \
-                    + '\t' \
-                    + pints.strfloat(p[2 * i + 1]) \
-                    + '\n' \
-                    )
+
+    #
+    # Store bestn results
+    #
+    obtained_scores = scores[:bestn]
+    obtained_parameters = params[:bestn]
+    for i in range(bestn):
+        fn = '%s/%s-run%s-rank%s.txt' % (savedir, prefix, run_id, i)
+        utils.save_protocol(fn, obtained_parameters[i])
+        gn = '%s/%s-score-run%s-rank%s.txt' % (savedir, prefix, run_id, i)
+        np.savetxt(gn, np.asarray(obtained_scores[i]).reshape(-1))
 
 print('Done')
