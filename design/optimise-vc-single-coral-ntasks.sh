@@ -35,7 +35,7 @@ which python
 DESIGN="GSA-A"
 MODEL="ohara-2011"
 PATH2MODEL="../mmt/${MODEL}.mmt"
-N=5
+N=10
 LOG="./log/optimise-vc-single"
 mkdir -p $LOG
 

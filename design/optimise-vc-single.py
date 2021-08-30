@@ -19,10 +19,11 @@ import psutil
 print(psutil.virtual_memory())
 
 import method.model
+import method.utils as utils
 
 prefix = 'opt-prt'
 n_steps = 20  # number of steps of the protocol
-dt = 0.1  # ms
+dt = 1  # ms
 seed_id = 101  # random seed
 run_id = 0
 
@@ -89,7 +90,8 @@ model = method.model.VCModel(
     args.model_file,
     transform=transform,
     dt=dt,
-    n_steps=n_steps
+    n_steps=n_steps,
+    max_evaluation_time=10,
 )
 
 # Protocol parameter: [step_1_voltage, step_1_duration, step_2..., step3...]
@@ -101,16 +103,17 @@ transformation = pints.RectangularBoundariesTransformation(boundaries)
 # Create design
 d, c = design_list[args.design]
 if 'LSA' in args.design:
-    method = pyoed.CentralDifferenceSensitivity
+    sensitivity_method = pyoed.CentralDifferenceSensitivity
     method_kw = dict(h=h)
-    design = d(model, default_param, criterion=c, method=method,
+    design = d(model, default_param, criterion=c, method=sensitivity_method,
                method_kw=method_kw)
     design.set_maximum_error(1e16)
 elif 'GSA' in args.design:
-    method = pyoed.SobolFirstOrderSensitivity
+    sensitivity_method = pyoed.SobolFirstOrderSensitivity
     method_kw = dict(n_samples=n_samples)
     b = np.array([logp_lower, logp_upper]).T
-    design = d(model, b, criterion=c, method=method, method_kw=method_kw)
+    design = d(model, b, criterion=c, method=sensitivity_method,
+               method_kw=method_kw)
     design.set_n_batches(int(n_samples / 2**6))
     design.set_maximum_error(1e16)
 elif 'Shannon' in args.design:
@@ -213,7 +216,7 @@ for i_optim in range(args.n_optim):
             design,
             x0,
             sigma0=[5, 50] * n_steps,  # Don't let it make a big jump first.
-            boundaries=boundaries,
+            # boundaries=boundaries,  # transformation will handle the bounds.
             transformation=transformation,
             method=pints.CMAES)
     # if set_parallel > opt.optimiser().suggested_population_size():
@@ -244,7 +247,7 @@ for i_optim in range(args.n_optim):
 
     if args.tmp:
         fn = '%s/%s-run%s-%s.txt' % (savedir, prefix, run_id, i_optim)
-        method.utils.save_protocol(fn, p)
+        utils.save_protocol(fn, p)
         gn = '%s/%s-score-run%s-%s.txt' % (savedir, prefix, run_id, i_optim)
         np.savetxt(gn, np.asarray(s).reshape(-1))
 
@@ -276,7 +279,7 @@ if not args.tmp:
     obtained_parameters = params[:bestn]
     for i in range(bestn):
         fn = '%s/%s-run%s-rank%s.txt' % (savedir, prefix, run_id, i)
-        method.utils.save_protocol(fn, obtained_parameters[i])
+        utils.save_protocol(fn, obtained_parameters[i])
         gn = '%s/%s-score-run%s-rank%s.txt' % (savedir, prefix, run_id, i)
         np.savetxt(gn, np.asarray(obtained_scores[i]).reshape(-1))
 
