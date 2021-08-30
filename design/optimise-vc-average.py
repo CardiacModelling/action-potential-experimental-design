@@ -7,9 +7,6 @@ sys.path.append('..')
 import os
 import argparse
 import numpy as np
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 import pints
 import pyoed
 import gc
@@ -130,6 +127,9 @@ p_evaluate = np.copy(design._measures[0]._method.ask())
 
 # DEBUG: Test parameter samples with a simple protocol
 if args.debug:
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
     test_prt = [-80, 200, 20, 500, -40, 500, -80, 200]
     test_t = np.arange(0, np.sum(test_prt[1::2]), dt)
     for model in model_list:
