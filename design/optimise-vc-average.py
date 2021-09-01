@@ -116,7 +116,7 @@ elif 'GSA' in args.design:
     b = np.array([logp_lower, logp_upper]).T
     for model in model_list:
         design = d(model, b, criterion=c, method=sensitivity_method, method_kw=method_kw)
-        design.set_n_batches(int(n_samples / 2**6))
+        design.set_n_batches(int(n_samples / 2**8))
         design_list.append(design)
 elif 'Shannon' in args.design:
     design = None
