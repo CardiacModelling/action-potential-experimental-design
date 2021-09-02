@@ -115,15 +115,18 @@ class ShannonDesignMeasure(pyoed.DesignMeasure):
         self._boundaries = boundaries
         self._n_mp = model.n_model_parameters()
         self._n_dp = model.n_design_variables()
-        if method is not None and not issubclass(method, pyoed.Sensitivity):
-            raise ValueError('Method must be subclass of pyoed.Sensitivity.')
-        self._method = method
         self.set_maximum_error(float('inf'))
         self.set_n_batches(None)
-        self._n_samples = n_samples
         if len(weight) != 4:
             raise ValueError('Weight must be a list of length 4.')
         self._weight = np.array(weight)
+
+        # Create sensitivity method
+        if method is not None and not issubclass(method, pyoed.Sensitivity):
+            raise ValueError('Method must be subclass of pyoed.Sensitivity.')
+        if not method:
+            method = pyoed.SobolFirstOrderSensitivity
+        self._method = method(self._boundaries, **method_kw)
 
     def set_n_batches(self, n):
         """
@@ -138,6 +141,13 @@ class ShannonDesignMeasure(pyoed.DesignMeasure):
         sensitivity.
         """
         return self._n_batches
+
+    def set_maximum_error(self, e):
+        """
+        Set the maximum error value during ``__call__``, when the result is not
+        finite.
+        """
+        self._max_error = e
 
     def maximum_error(self):
         """

@@ -17,6 +17,7 @@ print(psutil.virtual_memory())
 
 import method.model
 import method.utils as utils
+from method.shannon import ShannonDesignMeasure
 
 prefix = 'opt-prt'
 n_steps = 20  # number of steps of the protocol
@@ -31,7 +32,7 @@ design_list = {
     'GSA-A':(pyoed.GlobalSensitivityDesignMeasure, pyoed.A_criterion),
     'GSA-D':(pyoed.GlobalSensitivityDesignMeasure, pyoed.D_criterion),
     'GSA-E':(pyoed.GlobalSensitivityDesignMeasure, pyoed.Estar_criterion),
-    'Shannon':None, # TODO
+    'Shannon':(ShannonDesignMeasure, [1, 1, 0, 1]),
 }
 
 parser = argparse.ArgumentParser('OED for VC experiments.')
@@ -111,11 +112,16 @@ elif 'GSA' in args.design:
     b = np.array([logp_lower, logp_upper]).T
     design = d(model, b, criterion=c, method=sensitivity_method,
                method_kw=method_kw)
-    design.set_n_batches(int(n_samples / 2**6))
+    design.set_n_batches(int(n_samples / 2**8))
     design.set_maximum_error(1e16)
 elif 'Shannon' in args.design:
-    design = None
-    raise NotImplementedError
+    sensitivity_method = pyoed.SobolFirstOrderSensitivity
+    method_kw = dict(n_samples=n_samples)
+    b = np.array([logp_lower, logp_upper]).T
+    design = d(model, b, weight=c, method=sensitivity_method,
+               method_kw=method_kw)
+    design.set_n_batches(int(n_samples / 2**8))
+    design.set_maximum_error(1e16)
 
 p_evaluate = np.copy(design._method.ask())
 
