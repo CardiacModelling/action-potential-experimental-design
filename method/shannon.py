@@ -1,11 +1,8 @@
 #
 # OED score function with simple Shannon entropy using GSA approximation.
 #
-from __future__ import print_function
 import numpy as np
 import pyoed
-from SALib.sample import saltelli
-import sobol
 
 
 def shannon_all_measure(s):
@@ -121,178 +118,93 @@ class ShannonDesignMeasure(pyoed.DesignMeasure):
         if method is not None and not issubclass(method, pyoed.Sensitivity):
             raise ValueError('Method must be subclass of pyoed.Sensitivity.')
         self._method = method
+        self.set_maximum_error(float('inf'))
         self.set_n_batches(None)
         self._n_samples = n_samples
         if len(weight) != 4:
             raise ValueError('Weight must be a list of length 4.')
         self._weight = np.array(weight)
+
+    def set_n_batches(self, n):
+        """
+        Set number of batches for calculating the sensitivity. ``n`` must be an
+        integer larger than 1 or ``None``. Default ``None``.
+        """
+        self._n_batches = n
+
+    def n_batches(self):
+        """
+        Return the currently set number of batches for calculating the
+        sensitivity.
+        """
+        return self._n_batches
+
+    def maximum_error(self):
+        """
+        Return the currently set maximum error value during ``__call__``.
+        """
+        return self._max_error
  
     def n_parameters(self):
-        return self._n_working_parameters
+        return self._n_dp
 
-    def set_voltage(self, v=None):
-        self._set_voltage = v
-        if v is None and self._set_duration is None:
-            self._n_working_parameters = self._n_parameters
-        elif v is not None and self._set_duration is None:
-            self._n_working_parameters = int(self._n_parameters / 2)
-        else:
-            raise ValueError('Both voltage and duration are fixed.')
-
-    def set_duration(self, v=None):
-        self._set_duration = v
-        if v is None and self._set_voltage is None:
-            self._n_working_parameters = self._n_parameters
-        elif v is not None and self._set_voltage is None:
-            self._n_working_parameters = int(self._n_parameters / 2)
-        else:
-            raise ValueError('Both voltage and duration are fixed.')
-
-    def parameter_samples(self):
-        # Return the parameter samples for calculating the Sobol sensitivity
-        return self._parameter_samples
-
-    def _convert_parameter(self, p):
-        if self._set_voltage is not None and self._set_duration is not None:
-            raise ValueError('Both voltage and duration are fixed.')
-
-        if self._set_voltage is not None:
-            param_duration = np.copy(p)
-            p = np.zeros(len(param_duration))
-            p[::2] = np.copy(self._set_voltage)
-            p[1::2] = param_duration
-
-        if self._set_duration is not None:
-            param_voltage = np.copy(p)
-            p = np.zeros(len(param_duration))
-            p[1::2] = np.copy(self._set_duration)
-            p[::2] = param_voltage
-
-        return p
-
-    def sub_measures(self, param, debug=False):
+    def sub_measures(self, param):
         # Return each sub Shannon measure
 
-        # Get parameter
-        param = self._convert_parameter(param)
-        seg_t = param[1::2]  # step duration
+        # Get step duration
+        seg_t = param[1::2]
 
-        # Update protocol
-        for model in self._model_list:
-            model.set_voltage_protocol(param)
-            # Check if the protocol gives nonsense simulations
-            if not np.all(np.isfinite(model.simulated_currents)):
-                return np.inf
+        # Update design
+        self._model.design(param)
+        # Check if the protocol gives nonsense simulations
+        # if not np.all(np.isfinite(self._model.simulated_currents)):
+        #     return float('inf')
 
-        ds = 100  # NOTE downsample rate for the output time points
+        # ask()
+        ps = self._method.ask()
+        fs = []
+        for p in ps:
+            fs.append(self._model.simulate(p))
+        fs = np.asarray(fs)
+        if not np.isfinite(fs).all():
+            return self._max_error
 
-        scores = []
-        for model in self._model_list:
-            # Run simulations
-            ## Run simulation per parameter sample
-            #sims = []
-            #for i, p in enumerate(self._parameter_samples):
-            #    sims.append(model.simulate(p))
-            #sims = np.asarray(sims)
-            # Broadcast method to run simulations for all parameter samples
-            sims = model.simulate(self._parameter_samples, downsample=ds,
-                    multi_input=True)
+        # tell()
+        if self._n_batches is None:
+            s = self._method.tell(fs)
+        else:
+            n_outputs = len(fs[0])
+            s = np.zeros((self._n_mp, n_outputs))
+            s[:] = np.nan
+            n_each = n_outputs // self._n_batches
+            start = 0
+            if n_each > 0:
+                for i in range(self._n_batches - 1):
+                    end = (i + 1) * n_each
+                    s[:, start:end] = self._method.tell(fs[:, start:end])
+                    start = end
+            s[:, start:] = self._method.tell(fs[:, start:])
+            s = s.T  # rows being model outputs; cols being model parameters
 
-            if not np.all(np.isfinite(sims)):
-                return np.inf
+        # Measure
+        ds_t = self._model.times()  # time point for each s
 
-            ds_time_points = len(model.times()[::ds])
-            S_gsa = np.zeros((ds_time_points, self._n_model_parameters))
-            ## Use SALib.analyze.sobol
-            #for i, idx in enumerate(time_idx):
-            #    # Compute Sobol sensitivity
-            #    Si = sobol.analyze(self._salib_problem, sims[:, idx],
-            #            calc_second_order=False)
-            #    # Schenkendorf et al. 2018 (Eq. 10) uses only S1
-            #    S_gsa[i, :] = Si['S1']
-            # Use reimplemented sobol
-            Si = sobol.analyze(self._salib_problem, sims, conf_level=None,
-                    calc_second_order=False)
-
-            S_gsa[:, :] = Si['S1'].T
-
-            ds_t = model.times()[::100]  # time point for each S_gsa
-
-            s1 = shannon_all_measure(S_gsa)
-            s2 = shannon_segments_measure(S_gsa, ds_t, seg_t)
-            s3 = parameter_dependency_measure(S_gsa)
-            s4 = output_uncertainty_measure(sims.T)
-            s = np.array([s1, s2, s3, s4]) * self._weight
-
-            scores.append(s)
-
-        # Take mean over all input models
-        s = np.mean(scores, axis=0)
+        s1 = shannon_all_measure(s)
+        s2 = shannon_segments_measure(s, ds_t, seg_t)
+        s3 = parameter_dependency_measure(s)
+        s4 = output_uncertainty_measure(fs.T)
+        s = np.array([s1, s2, s3, s4]) * self._weight
         return s
 
-    def __call__(self, param, debug=False):
+    def __call__(self, param):
+        # Return the design measure value.
 
         try:
-            # Get parameter
-            param = self._convert_parameter(param)
-            seg_t = param[1::2]  # step duration
-
-            # Update protocol
-            for model in self._model_list:
-                model.set_voltage_protocol(param)
-                # Check if the protocol gives nonsense simulations
-                if not np.all(np.isfinite(model.simulated_currents)):
-                    return np.inf
-
-            ds = 100  # NOTE downsample rate for the output time points
-
-            # Run simulations
-            scores = []
-            for model in self._model_list:
-                # Run simulations
-                ## Run simulation per parameter sample
-                #sims = []
-                #for i, p in enumerate(self._parameter_samples):
-                #    sims.append(model.simulate(p))
-                #sims = np.asarray(sims)
-                # Broadcast method to run simulations for all parameter samples
-                sims = model.simulate(self._parameter_samples, downsample=ds,
-                        multi_input=True)
-
-                if not np.all(np.isfinite(sims)):
-                    return np.inf
-
-                ds_time_points = len(model.times()[::ds])
-                S_gsa = np.zeros((ds_time_points, self._n_model_parameters))
-                ## Use SALib.analyze.sobol
-                #for i, idx in enumerate(time_idx):
-                #    # Compute Sobol sensitivity
-                #    Si = sobol.analyze(self._salib_problem, sims[:, idx],
-                #            calc_second_order=False)
-                #    # Schenkendorf et al. 2018 (Eq. 10) uses only S1
-                #    S_gsa[i, :] = Si['S1']
-                # Use reimplemented sobol
-                Si = sobol.analyze(self._salib_problem, sims, conf_level=None,
-                        calc_second_order=False)
-
-                S_gsa[:, :] = Si['S1'].T
-
-                ds_t = model.times()[::100]  # time point for each S_gsa
-
-                s1 = shannon_all_measure(S_gsa)
-                s2 = shannon_segments_measure(S_gsa, ds_t, seg_t)
-                s3 = parameter_dependency_measure(S_gsa)
-                s4 = output_uncertainty_measure(sims.T)
-                s = np.dot([s1, s2, s3, s4], self._weight)
-
-                scores.append(s)
-
-            # Take mean over all input models
-            s = np.mean(scores)
-
+            s = self.sub_measures(param)
+            s = np.sum(s)
             if np.isfinite(s):
                 return s
             else:
-                return np.inf
+                return self._max_error
         except:
-            return np.inf  # Just make sure it won't break the opt process.
+            return self._max_error  # Just make sure it won't break the opt.
