@@ -18,6 +18,7 @@ print(psutil.virtual_memory())
 
 import method.model
 import method.utils as utils
+from method.shannon import ShannonDesignMeasure
 
 prefix = 'opt-prt'
 n_steps = 20  # number of steps of the protocol
@@ -32,7 +33,7 @@ design_list = {
     'GSA-A':(pyoed.GlobalSensitivityDesignMeasure, pyoed.A_criterion),
     'GSA-D':(pyoed.GlobalSensitivityDesignMeasure, pyoed.D_criterion),
     'GSA-E':(pyoed.GlobalSensitivityDesignMeasure, pyoed.Estar_criterion),
-    'Shannon':None, # TODO
+    'Shannon':(ShannonDesignMeasure, [1, 1, 0, 1]),
 }
 
 parser = argparse.ArgumentParser('OED for VC experiments.')
@@ -92,7 +93,9 @@ elif 'GSA' in args.design or 'Shannon' in args.design:
 model_list = []
 for model_file in args.model_file_list:
     model_list.append(
-        method.model.VCModel(model_file, transform=transform, dt=dt, n_steps=n_steps, max_evaluation_time=10,))
+        method.model.VCModel(model_file, transform=transform, dt=dt,
+                             n_steps=n_steps, max_evaluation_time=10,)
+    )
 
 # Protocol parameter: [step_1_voltage, step_1_duration, step_2..., step3...]
 lower = [-120, 50] * n_steps
@@ -115,12 +118,19 @@ elif 'GSA' in args.design:
     method_kw = dict(n_samples=n_samples)
     b = np.array([logp_lower, logp_upper]).T
     for model in model_list:
-        design = d(model, b, criterion=c, method=sensitivity_method, method_kw=method_kw)
+        design = d(model, b, criterion=c, method=sensitivity_method,
+                   method_kw=method_kw)
         design.set_n_batches(int(n_samples / 2**8))
         design_list.append(design)
 elif 'Shannon' in args.design:
-    design = None
-    raise NotImplementedError
+    sensitivity_method = pyoed.SobolFirstOrderSensitivity
+    method_kw = dict(n_samples=n_samples)
+    b = np.array([logp_lower, logp_upper]).T
+    for model in model_list:
+        design = d(model, b, weight=c, method=sensitivity_method,
+                   method_kw=method_kw)
+        design.set_n_batches(int(n_samples / 2**8))
+        design_list.append(design)
 design = pyoed.CombineDesignMeasure(design_list, aggregate=np.mean)
 
 p_evaluate = np.copy(design._measures[0]._method.ask())
