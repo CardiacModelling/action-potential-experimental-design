@@ -51,5 +51,5 @@ for i, o in enumerate(order[:args.best_n]):
     score = score_values[o]
     call(['cp',
           protocol,
-          f'{new_path}/opt-prt-run{run}-rank{o}.txt'])
-    np.savetxt(f'{new_path}/opt-prt-score-run{run}-rank{o}.txt', [score])
+          f'{new_path}/opt-prt-run{run}-rank{i}.txt'])
+    np.savetxt(f'{new_path}/opt-prt-score-run{run}-rank{i}.txt', [score])
