@@ -1,0 +1,25 @@
+design = Shannon
+run_id = 0-re8
+Model files:
+    ../mmt/tnnp-2004.mmt
+    ../mmt/fink-2008.mmt
+    ../mmt/grandi-2010.mmt
+    ../mmt/ohara-2011.mmt
+    ../mmt/cipa-2017.mmt
+    ../mmt/tomek-2019.mmt
+transform = <ufunc 'exp'>
+Model lower bound:
+    -2, -2, -2, -2, -2, -2, -2, -2, 
+Model upper bound:
+    2, 2, 2, 2, 2, 2, 2, 2, 
+n_samples = 512
+p_evaluate_file = "opt-prt-run0-re8-parameter_evaluate.txt"
+n_steps = 20
+dt = 2
+rand_x0 = True
+seed_id = 109
+fit_seed = 478719238
+Protocol lower bound:
+    -120, 50, -120, 50, -120, 50, -120, 50, -120, 50, -120, 50, -120, 50, -120, 50, -120, 50, -120, 50, -120, 50, -120, 50, -120, 50, -120, 50, -120, 50, -120, 50, -120, 50, -120, 50, -120, 50, -120, 50, 
+Protocol upper bound:
+    60, 2000.0, 60, 2000.0, 60, 2000.0, 60, 2000.0, 60, 2000.0, 60, 2000.0, 60, 2000.0, 60, 2000.0, 60, 2000.0, 60, 2000.0, 60, 2000.0, 60, 2000.0, 60, 2000.0, 60, 2000.0, 60, 2000.0, 60, 2000.0, 60, 2000.0, 60, 2000.0, 60, 2000.0, 60, 2000.0, 
