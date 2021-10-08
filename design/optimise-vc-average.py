@@ -43,6 +43,8 @@ parser.add_argument('-l', '--model_file_list',
     help='A plain text file containing a list of mmt file names.')
 parser.add_argument('-n', '--n_optim', type=int, default=3,
     help='Number of optimisation repeats.')
+parser.add_argument('-z', '--penalty', type=float, default=0,
+    help='Apply penalty to the OED.')
 parser.add_argument('-r', '--repeat_id', type=int, default=0,
     help='Repeat ID for `--tmp`, splitting a full run into multiple runs.')
 parser.add_argument('-p', '--parallel', type=int, default=-1,
@@ -67,6 +69,10 @@ else:
     set_parallel = args.parallel
 
 savedir = './out/' + args.design + '-vc-' + file_name
+if args.penalty:
+    loaddir = savedir
+    load_id = str(run_id)
+    savedir += '-penalty' + str(args.penalty)
 if args.tmp:
     savedir += '-tmp'
     seed_id += args.repeat_id  # Each repeat run has a different seed.
@@ -133,7 +139,23 @@ elif 'Shannon' in args.design:
         design_list.append(design)
 design = pyoed.CombineDesignMeasure(design_list, aggregate=np.mean)
 
-p_evaluate = np.copy(design._measures[0]._method.ask())
+# Penalty
+if args.penalty:  # if not zero
+    from method.penalty import DurationPenalty
+    try:
+        fn = '%s/%s-run%s-rank0.txt' % (loaddir, prefix, load_id)
+        pre_optimised_protocol = np.loadtxt(fn).reshape(-1)
+    except OSError:
+        e = 'Cannot load previous OED results for penalty calculation.'
+        raise Exception(e)
+    pre_optimised_protocol_score = design(pre_optimised_protocol)
+    max_duration = np.sum(np.abs(upper[1::2]))
+    beta = args.penalty * pre_optimised_protocol_score / max_duration
+    penalty = DurationPenalty(design.n_parameters(), beta)
+    design = pyoed.CombineDesignMeasure([design, penalty], aggregate=np.sum)
+    p_evaluate = np.copy(design._measures[0]._measures[0]._method.ask())
+else:
+    p_evaluate = np.copy(design._measures[0]._method.ask())
 
 # DEBUG: Test parameter samples with a simple protocol
 if args.debug:
@@ -209,6 +231,8 @@ with open('%s/%s-run%s.out' % (savedir, prefix, run_id), 'w') as f:
     f.write('\nProtocol upper bound:\n    ')
     for u in upper:
         f.write(str(u) + ', ')
+    f.write('\npenalty = ' + str(args.penalty))
+
 
 # Optimise design
 params, scores = [], []
@@ -223,6 +247,14 @@ for i_optim in range(args.n_optim):
                 need_x0 = False
     else:
         x0 = [-80, 200, 20, 500, -40, 500, -80, 500] * (n_steps // 4)
+
+    if args.penalty:  # if not zero
+        x0 = np.copy(pre_optimised_protocol)
+        print('Using pre-optimised protocol as the starting point with penalty'
+              + '=' + str(args.penalty))
+
+    optimiser = pints.CMAES
+
     print('x0: ', x0)
 
     # Try it with x0
@@ -236,7 +268,7 @@ for i_optim in range(args.n_optim):
             sigma0=[5, 50] * n_steps,  # Don't let it make a big jump first.
             # boundaries=boundaries,  # transformation will handle the bounds.
             transformation=transformation,
-            method=pints.CMAES)
+            method=optimiser)
     # if set_parallel > opt.optimiser().suggested_population_size():
     #     print('Suggested population size was:',
     #           opt.optimiser().suggested_population_size())
