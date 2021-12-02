@@ -63,7 +63,7 @@ for i, opt_model in enumerate(opt_models):
             continue
 
         # Reshape it to [step_1_voltage, step_1_duration, ...]
-        all_p = all_p.flatten()
+        all_p = all_p.flatten().round()
         times = np.arange(0, np.sum(all_p[1::2]), dt)  # ms
 
         # Set time ticks
