@@ -4,6 +4,7 @@ sys.path.append('..')
 import os
 import numpy as np
 import pints
+import pyoed
 import method.model
 
 #
@@ -76,16 +77,18 @@ boundaries = np.array([logp_lower, logp_upper]).T
 # Create scores shape (model_side, measure_side)
 score_matrix = []
 # Single models
-for model in model_list:
+for i_model in range(len(model_list)):
     score_list = []
     for n in design_list:
         d, c = design_list[n]
         if 'LSA' in n:
+            model = model_list[i_model]
             sensitivity_method = pyoed.CentralDifferenceSensitivity
-            method_kw = dict(h=h)
-            design = d(model, default_param, criterion=c, method=sensitivity_method,
+            method_kw = dict(h=lsa_h)
+            design = d(model, lsa_local_param, criterion=c, method=sensitivity_method,
                        method_kw=method_kw)
         elif 'GSA' in n:
+            model = log_model_list[i_model]
             sensitivity_method = pyoed.SobolFirstOrderSensitivity
             method_kw = dict(n_samples=n_samples)
             design = d(model, boundaries, criterion=c, method=sensitivity_method,
@@ -101,15 +104,15 @@ for n in design_list:
     d, c = design_list[n]
     if 'LSA' in n:
         sensitivity_method = pyoed.CentralDifferenceSensitivity
-        method_kw = dict(h=h)
+        method_kw = dict(h=lsa_h)
         for model in model_list:
-            design = d(model, default_param, criterion=c, method=sensitivity_method,
+            design = d(model, lsa_local_param, criterion=c, method=sensitivity_method,
                        method_kw=method_kw)
             average_list.append(design)
     elif 'GSA' in n:
         sensitivity_method = pyoed.SobolFirstOrderSensitivity
         method_kw = dict(n_samples=n_samples)
-        for model in model_list:
+        for model in log_model_list:
             design = d(model, boundaries, criterion=c, method=sensitivity_method,
                        method_kw=method_kw)
             design.set_n_batches(int(n_samples / 2**8))
@@ -118,12 +121,12 @@ for n in design_list:
 score_matrix.append(score_list)
 
 
-# Get optimal protocols and evaluate the scores TODO
+# Get optimal protocols and evaluate the scores
 for opt_model in opt_models:
     for opt_measure in opt_measures:
         # Load protocol
-        opt_file = '../design/out-' + opt_measure + '/opt-prt' + opt_model \
-                + '-run0-rank0.txt'
+        opt_file = '../design/out/' + opt_measure + '-vc-' + opt_model \
+                + '/opt-prt-run0-rank0.txt'
         try:
             all_p = np.loadtxt(opt_file)
         except: # OSError
