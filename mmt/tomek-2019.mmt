@@ -122,17 +122,17 @@ PCaNap = 0.00125 * PCap
     in [1]
 PCap = 1.1 * PCa
     in [1]
-PhiCaK_i = 1 * membrane.vffrt * (gamma_ki * intracellular_ions.ki * exp(1 * membrane.vfrt) - gamma_ko * extracellular.ko) / (exp(1 * membrane.vfrt) - 1)
+PhiCaK_i = if(membrane.vfrt==0, (gamma_ki * intracellular_ions.ki - gamma_ko * extracellular.ko), 1 * membrane.vffrt * (gamma_ki * intracellular_ions.ki * exp(1 * membrane.vfrt) - gamma_ko * extracellular.ko) / (exp(1 * membrane.vfrt) - 1))
     in [1]
-PhiCaK_ss = 1 * membrane.vffrt * (gamma_kss * intracellular_ions.kss * exp(1 * membrane.vfrt) - gamma_ko * extracellular.ko) / (exp(1 * membrane.vfrt) - 1)
+PhiCaK_ss = if(membrane.vfrt==0, (gamma_kss * intracellular_ions.kss - gamma_ko * extracellular.ko), 1 * membrane.vffrt * (gamma_kss * intracellular_ions.kss * exp(1 * membrane.vfrt) - gamma_ko * extracellular.ko) / (exp(1 * membrane.vfrt) - 1))
     in [1]
-PhiCaL_i = 4 * membrane.vffrt * (gamma_cai * intracellular_ions.cai * exp(2 * membrane.vfrt) - gamma_cao * extracellular.cao) / (exp(2 * membrane.vfrt) - 1)
+PhiCaL_i = if(membrane.vfrt==0, 4 * (gamma_cai * intracellular_ions.cai - gamma_cao * extracellular.cao), 4 * membrane.vffrt * (gamma_cai * intracellular_ions.cai * exp(2 * membrane.vfrt) - gamma_cao * extracellular.cao) / (exp(2 * membrane.vfrt) - 1))
     in [1]
-PhiCaL_ss = 4 * membrane.vffrt * (gamma_cass * intracellular_ions.cass * exp(2 * membrane.vfrt) - gamma_cao * extracellular.cao) / (exp(2 * membrane.vfrt) - 1)
+PhiCaL_ss = if(membrane.vfrt==0, 4 * (gamma_cass * intracellular_ions.cass - gamma_cao * extracellular.cao), 4 * membrane.vffrt * (gamma_cass * intracellular_ions.cass * exp(2 * membrane.vfrt) - gamma_cao * extracellular.cao) / (exp(2 * membrane.vfrt) - 1))
     in [1]
-PhiCaNa_i = 1 * membrane.vffrt * (gamma_nai * intracellular_ions.nai * exp(1 * membrane.vfrt) - gamma_nao * extracellular.nao) / (exp(1 * membrane.vfrt) - 1)
+PhiCaNa_i = if(membrane.vfrt==0, (gamma_nai * intracellular_ions.nai - gamma_nao * extracellular.nao), 1 * membrane.vffrt * (gamma_nai * intracellular_ions.nai * exp(1 * membrane.vfrt) - gamma_nao * extracellular.nao) / (exp(1 * membrane.vfrt) - 1))
     in [1]
-PhiCaNa_ss = 1 * membrane.vffrt * (gamma_nass * intracellular_ions.nass * exp(1 * membrane.vfrt) - gamma_nao * extracellular.nao) / (exp(1 * membrane.vfrt) - 1)
+PhiCaNa_ss = if(membrane.vfrt==0, (gamma_nass * intracellular_ions.nass - gamma_nao * extracellular.nao), 1 * membrane.vffrt * (gamma_nass * intracellular_ions.nass * exp(1 * membrane.vfrt) - gamma_nao * extracellular.nao) / (exp(1 * membrane.vfrt) - 1))
     in [1]
 anca_i = 1 / (k2n / km2n + (1 + Kmn / intracellular_ions.cai) ^ 4)
     in [1]
@@ -699,7 +699,7 @@ tmL = 0.1292 [ms] * exp(-((membrane.v + 45.79 [mV]) / 15.54 [mV]) ^ 2) + 0.06487
     in [ms]
 
 [INab]
-INab = PNab * membrane.vffrt * (intracellular_ions.nai * exp(membrane.vfrt) - extracellular.nao) / (exp(membrane.vfrt) - 1)
+INab = if(membrane.vfrt == 0, PNab * (intracellular_ions.nai - extracellular.nao), PNab * membrane.vffrt * (intracellular_ions.nai * exp(membrane.vfrt) - extracellular.nao) / (exp(membrane.vfrt) - 1))
     in [A/F]
 PNab =  1.92389999999999994e-9 [mS/uF]
     in [mS/uF]

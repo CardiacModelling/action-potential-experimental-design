@@ -157,15 +157,15 @@ fcaCaj = 0
     in [1]
 fss = 1 / (1 + exp((membrane_potential.V_m + 35 [mV]) / 9 [mV])) + 0.6 / (1 + exp((50 [mV] - membrane_potential.V_m) / 20 [mV]))
     in [1]
-ibarca_j = parameters.pCa * 4 [cm^2/uF] * membrane_potential.V_m * parameters.Frdy * parameters.FoRT * (0.341 * Ca_Concentrations.Ca_j * exp(2 * membrane_potential.V_m * parameters.FoRT) - 0.341 * parameters.Cao) / (exp(2 * membrane_potential.V_m * parameters.FoRT) - 1)
+ibarca_j = if(membrane_potential.V_m == 0, parameters.pCa * 4 [cm^2/uF] *  (0.341 * Ca_Concentrations.Ca_j - 0.341 * parameters.Cao), parameters.pCa * 4 [cm^2/uF] * membrane_potential.V_m * parameters.Frdy * parameters.FoRT * (0.341 * Ca_Concentrations.Ca_j * exp(2 * membrane_potential.V_m * parameters.FoRT) - 0.341 * parameters.Cao) / (exp(2 * membrane_potential.V_m * parameters.FoRT) - 1))
     in [A/F]
-ibarca_sl = parameters.pCa * 4 [cm^2/uF] * membrane_potential.V_m * parameters.Frdy * parameters.FoRT * (0.341 * Ca_Concentrations.Ca_sl * exp(2 * membrane_potential.V_m * parameters.FoRT) - 0.341 * parameters.Cao) / (exp(2 * membrane_potential.V_m * parameters.FoRT) - 1)
+ibarca_sl = if(membrane_potential.V_m == 0, parameters.pCa * 4 [cm^2/uF] *  (0.341 * Ca_Concentrations.Ca_sl - 0.341 * parameters.Cao), parameters.pCa * 4 [cm^2/uF] * membrane_potential.V_m * parameters.Frdy * parameters.FoRT * (0.341 * Ca_Concentrations.Ca_sl * exp(2 * membrane_potential.V_m * parameters.FoRT) - 0.341 * parameters.Cao) / (exp(2 * membrane_potential.V_m * parameters.FoRT) - 1))
     in [A/F]
-ibark = parameters.pK * membrane_potential.V_m * parameters.Frdy * parameters.FoRT * (0.75 [cm^2/uF] * K_Concentration.K_i * exp(membrane_potential.V_m * parameters.FoRT) - 0.75 [cm^2/uF] * parameters.Ko) / (exp(membrane_potential.V_m * parameters.FoRT) - 1)
+ibark = if(membrane_potential.V_m == 0, parameters.pK * (0.75 [cm^2/uF] * K_Concentration.K_i - 0.75 [cm^2/uF] * parameters.Ko), parameters.pK * membrane_potential.V_m * parameters.Frdy * parameters.FoRT * (0.75 [cm^2/uF] * K_Concentration.K_i * exp(membrane_potential.V_m * parameters.FoRT) - 0.75 [cm^2/uF] * parameters.Ko) / (exp(membrane_potential.V_m * parameters.FoRT) - 1))
     in [A/F]
-ibarna_j = parameters.pNa * membrane_potential.V_m * parameters.Frdy * parameters.FoRT * (0.75 [cm^2/uF] * Na_Concentrations.Na_j * exp(membrane_potential.V_m * parameters.FoRT) - 0.75 [cm^2/uF] * parameters.Nao) / (exp(membrane_potential.V_m * parameters.FoRT) - 1)
+ibarna_j = if(membrane_potential.V_m == 0, parameters.pNa * (0.75 [cm^2/uF] * Na_Concentrations.Na_j - 0.75 [cm^2/uF] * parameters.Nao), parameters.pNa * membrane_potential.V_m * parameters.Frdy * parameters.FoRT * (0.75 [cm^2/uF] * Na_Concentrations.Na_j * exp(membrane_potential.V_m * parameters.FoRT) - 0.75 [cm^2/uF] * parameters.Nao) / (exp(membrane_potential.V_m * parameters.FoRT) - 1))
     in [A/F]
-ibarna_sl = parameters.pNa * membrane_potential.V_m * parameters.Frdy * parameters.FoRT * (0.75 [cm^2/uF] * Na_Concentrations.Na_sl * exp(membrane_potential.V_m * parameters.FoRT) - 0.75 [cm^2/uF] * parameters.Nao) / (exp(membrane_potential.V_m * parameters.FoRT) - 1)
+ibarna_sl = if(membrane_potential.V_m == 0, parameters.pNa * (0.75 [cm^2/uF] * Na_Concentrations.Na_sl - 0.75 [cm^2/uF] * parameters.Nao), parameters.pNa * membrane_potential.V_m * parameters.Frdy * parameters.FoRT * (0.75 [cm^2/uF] * Na_Concentrations.Na_sl * exp(membrane_potential.V_m * parameters.FoRT) - 0.75 [cm^2/uF] * parameters.Nao) / (exp(membrane_potential.V_m * parameters.FoRT) - 1))
     in [A/F]
 taud = 1 [ms] * dss * (1 - exp(-(membrane_potential.V_m + 5 [mV]) / 6 [mV])) / (0.035 [1/mV] * (membrane_potential.V_m + 5 [mV]))
     in [ms]
