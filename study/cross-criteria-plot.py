@@ -34,7 +34,7 @@ for opt_model in opt_models:
     score_list = []
     for opt_measure in opt_measures:
         # Load score
-        score_file = './cross-criteria-evaluate/score%s-%s.txt' % \
+        score_file = './cross-criteria-evaluate/score-%s-%s.txt' % \
                 (opt_model, opt_measure)
         try:
             score = np.loadtxt(score_file)

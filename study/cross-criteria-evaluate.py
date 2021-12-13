@@ -148,5 +148,5 @@ for opt_model in opt_models:
             score_per_prt.append(score_per_prt_per_list)
 
         # Save score matrix
-        np.savetxt('%s/score%s-%s.txt' % (savedir, opt_model, opt_measure),
+        np.savetxt('%s/score-%s-%s.txt' % (savedir, opt_model, opt_measure),
                 score_per_prt)
