@@ -12,7 +12,7 @@ import method.heatmap as heatmap  # heap map helper function
 
 
 # Settings
-model_side = ['TNNP', 'Fink', 'Grandi', 'O\'Hara', 'CiPA', 'Tomek']
+model_side = ['TNNP', 'Fink', 'Grandi', 'O\'Hara', 'CiPA', 'Tomek', 'Average']
 measure_side = ['LSA A', 'LSA D', 'LSA E', 'GSA A', 'GSA D', 'GSA E',]
 #                'Shannon']
 
