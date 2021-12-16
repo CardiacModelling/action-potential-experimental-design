@@ -2,20 +2,19 @@
 """
 # Experimental esign for current-clamp experiments.
 """
-from __future__ import print_function
 import sys
-sys.path.append('../method')
+sys.path.append('..')
 import os
 import argparse
 import numpy as np
 import pints
 import pyoed
 
-import model as m
+import method.model
 
 prefix = 'opt-prt'
-n_steps = 10  # number of steps of the protocol
-dt = 0.1  # ms
+n_steps = 20  # number of steps of the protocol
+dt = 5  # ms
 seed_id = 101  # random seed
 run_id = 0
 
@@ -26,7 +25,6 @@ design_list = {
     'GSA-A':(pyoed.GlobalSensitivityDesignMeasure, pyoed.A_criterion),
     'GSA-D':(pyoed.GlobalSensitivityDesignMeasure, pyoed.D_criterion),
     'GSA-E':(pyoed.GlobalSensitivityDesignMeasure, pyoed.Estar_criterion),
-    'Shannon':None, # TODO
 }
 
 parser = argparse.ArgumentParser('OED for CC experiments.')
@@ -51,19 +49,19 @@ print('Seed ID: ', seed_id)
 if 'LSA' in args.design:
     transform = None
     h = 1e-3
-    default_param = np.ones(len(m.parameters))
+    default_param = np.ones(len(method.model.parameters))
 elif 'GSA' in args.design or 'Shannon' in args.design:
     transform = np.exp
     n_samples = 1024
-    logp_lower = [-2] * len(m.parameters)  # maybe +/-3
-    logp_upper = [2] * len(m.parameters)
+    logp_lower = [-2] * len(method.model.parameters)  # maybe +/-3
+    logp_upper = [2] * len(method.model.parameters)
 
 # Create model
-model = m.CCModel(args.model_file, transform=transform, dt=dt, n_steps=n_steps)
+model = method.model.CCModel(args.model_file, transform=transform, dt=dt, n_steps=n_steps)
 
-# Protocol parameter: [stim_1_amp, holding_1_duration, stim_2..., stim_3...]
-lower = [0, 50] * n_steps
-upper = [2, 2e3] * n_steps
+# Protocol parameter: [holding_1_duration, holding_2..., ...]
+lower = [50] * (n_steps - 1)
+upper = [2e3] * (n_steps - 1)
 boundaries = pints.RectangularBoundaries(lower, upper)
 
 # Create design
@@ -89,15 +87,16 @@ if args.debug:
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
-    test_prt = [1, 1000, 2, 800, 1, 500, 0.5, 500]
-    test_t = np.arange(0, np.sum(test_prt[1::2]) + 4, dt)
+    test_prt = [1000, 800, 500, 500]
     model.design(test_prt)
+    test_t = model.times()
     for p in p_evaluate:
         plt.plot(test_t, model.simulate(p))
     plt.xlabel('Times (ms)')
     plt.ylabel('Current (pA)')
     plt.savefig('%s/run%s-test' % (savedir, run_id))
     plt.close()
+    print('Plotting for debug.')
 
 # DEBUG: Time the evaluation of the design
 if args.debug:
@@ -109,7 +108,8 @@ if args.debug:
     fname = savedir + '/design-profile.prof'
     print('Benchmarking design.__call__')
     # Testing protocol parameters
-    x0 = [1, 1000, 2, 800] * 5
+    x0 = [1000, 800, 500, 400, 1000] * 4
+    x0 = x0[:-1]
     cProfile.run('x = design(x0)', fname)
     p = pstats.Stats(fname)
     p.strip_dirs()
@@ -190,10 +190,9 @@ for _ in range(args.n_optim):
             params.append(p)
             scores.append(s)
             print('Found solution:' )
-            print('Stimulus ampitude (x-80A/F)\tHolding duration (ms)' )
-            for i in range(n_steps):
-                print(pints.strfloat(p[2 * i]) + '\t' +
-                        pints.strfloat(p[2 * i + 1]))
+            print('Holding duration (ms)' )
+            for i in range(n_steps - 1):
+                print(pints.strfloat(p[i]))
     except ValueError:
         import traceback
         traceback.print_exc()
@@ -224,11 +223,9 @@ for i in range(bestn):
     p = obtained_parameters[i]
     fn = '%s/%s-run%s-rank%s.txt' % (savedir, prefix, run_id, i)
     with open(fn, 'w') as f:
-        f.write('# Stimulus ampitude [x-80A/F]\tHolding duration [ms]\n')
-        for i in range(len(p) // 2):
-            f.write(pints.strfloat(p[2 * i]) \
-                    + '\t' \
-                    + pints.strfloat(p[2 * i + 1]) \
+        f.write('# Holding duration [ms]\n')
+        for i in range(len(p)):
+            f.write(pints.strfloat(p[i]) \
                     + '\n' \
                     )
 

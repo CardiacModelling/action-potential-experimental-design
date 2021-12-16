@@ -151,9 +151,29 @@ class CCModel(pints.ForwardModel, pyoed.ForwardModel):
         return len(self.parameters)
 
     def n_design_variables(self):
-        return self._n_steps * 2
+        return self._n_steps - 1
 
     def design(self, variables):
+        # Assume protocol p is just the gap between stimuli
+        protocol = myokit.Protocol()
+        duration = 0
+        protocol.add_step(0, 50)  # No stim at the first 50 ms
+        duration += 50
+        for i in range(len(variables)):
+            d = variables[i]
+            # Add a stimulus at l size
+            protocol.add_step(1 * self._stim_amp, self._stim_dur)
+            # Add holding (no stimulus) for d duration
+            protocol.add_step(0, d)
+            duration += self._stim_dur + d
+        protocol.add_step(1 * self._stim_amp, self._stim_dur)
+        protocol.add_step(0, 500)  # No stim at the last 500 ms
+        duration += 500
+        self.simulation.set_protocol(protocol)
+        del(protocol)
+        self._times = np.arange(0, duration, self.dt)
+
+    def design_with_amplitude(self, variables):
         # Assume protocol p is
         # [stim_1_amp, holding_1_duration, stim_2_amp, ...]
         protocol = myokit.Protocol()
