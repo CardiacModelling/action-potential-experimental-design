@@ -83,19 +83,19 @@ if 'LSA' in args.design:
 elif 'GSA' in args.design or 'Shannon' in args.design:
     transform = np.exp
     n_samples = 32
-    logp_lower = [-2] * len(method.model.parameters)  # maybe +/-3
-    logp_upper = [2] * len(method.model.parameters)
+    logp_lower = [-0.5] * len(method.model.parameters)  # maybe +/-3
+    logp_upper = [0.5] * len(method.model.parameters)
 
 # Create models
 model_list = []
 for model_file in args.model_file_list:
     model_list.append(
-        model = method.model.CCModel(
-            args.model_file,
+        method.model.CCModel(
+            model_file,
             transform=transform,
             dt=dt,
             n_steps=n_steps,
-            max_evaluation_time=10,
+            max_evaluation_time=2,
         )
     )
 
@@ -129,7 +129,7 @@ elif 'Shannon' in args.design:
     raise NotImplementedError
 design = pyoed.CombineDesignMeasure(design_list, aggregate=np.mean)
 
-p_evaluate = np.copy(design._method.ask())
+p_evaluate = np.copy(design._measures[0]._method.ask())
 
 # DEBUG: Test parameter samples with a simple protocol
 if args.debug:

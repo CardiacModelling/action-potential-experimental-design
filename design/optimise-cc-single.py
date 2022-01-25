@@ -16,6 +16,7 @@ import psutil
 print(psutil.virtual_memory())
 
 import method.model
+import method.utils as utils
 
 prefix = 'opt-prt'
 n_steps = 20  # number of steps of the protocol
@@ -76,7 +77,7 @@ if 'LSA' in args.design:
     default_param = np.ones(len(method.model.parameters))
 elif 'GSA' in args.design or 'Shannon' in args.design:
     transform = np.exp
-    n_samples = 512
+    n_samples = 32  # 512
     logp_lower = [-2] * len(method.model.parameters)  # maybe +/-3
     logp_upper = [2] * len(method.model.parameters)
 
@@ -108,6 +109,7 @@ elif 'GSA' in args.design:
     b = np.array([logp_lower, logp_upper]).T
     design = d(model, b, criterion=c, method=sensitivity_method,
                method_kw=method_kw)
+    # design.set_n_batches(int(n_samples / 2**8))
 elif 'Shannon' in args.design:
     design = None
     raise NotImplementedError
@@ -122,7 +124,7 @@ if args.debug:
     test_prt = [1000, 800, 500, 500]
     model.design(test_prt)
     test_t = model.times()
-    for p in p_evaluate:
+    for p in p_evaluate[::64]:
         plt.plot(test_t, model.simulate(p))
     plt.xlabel('Times (ms)')
     plt.ylabel('Current (pA)')
@@ -220,7 +222,10 @@ for i_optim in range(args.n_optim):
             transformation=transformation,
             method=optimiser)
     opt.optimiser().set_population_size(30)
-    opt.set_max_iterations(1000)
+    if 'LSA' in args.design:
+        opt.set_max_iterations(1000)
+    else:
+        opt.set_max_iterations(160)
     opt.set_max_unchanged_iterations(iterations=100, threshold=1e-3)
     opt.set_parallel(set_parallel)
 
