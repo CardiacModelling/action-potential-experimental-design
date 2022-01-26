@@ -86,23 +86,19 @@ class BiomarkerExtractor(object):
         eddr = 'V/s',
     )
 
-    def __init__(self, times=None, aps=None, ds=None):
+    def __init__(self, pacing, times=None, aps=None, ds=None):
         self.BIOMARKERS = dict(
-            mdp = self.mdp,
-            top = self.top,
+            rmp = self.rmp,
             vmax = self.vmax,
-            cl = self.cl,
             mur = self.mur,
-            mrr = self.mrr,
             apa = self.apa,
             apd = self.apd,
             apd50 = self.apd50,
             apd90 = self.apd90,
             tri = self.tri,
-            dd = self.dd,
-            eddr = self.eddr,
         )
         self._has_data = False
+        self._pacing = pacing
         self.set_downsampling(ds)
         self.set_one_biomarker_per_full_action_potential(True)
         self.set_data(times, aps)
@@ -152,7 +148,7 @@ class BiomarkerExtractor(object):
                 ds = self.ds
             else:
                 ds = 1
-            self._spl = utils.fit_spline(self.times, self.aps, ds=ds)
+            self._spl = utils.fit_spline(self.times, self.aps, ds=ds, pacing=self._pacing)
         else:
             self._spl = None
 
@@ -199,44 +195,7 @@ class BiomarkerExtractor(object):
         detected.
         """
         self._same_n_biomarkers = bool(option)
-        if self._same_n_biomarkers and self._has_data:
-            # detect number of full action potentials
-            self._detect_n_aps()
-
-    def _apply_mask(self, x, m):
-        """
-        Apply filtering mask, which return x[m[0]:m[1]].
-        """
-        return x[m[0]:m[1]]
-
-    def _detect_n_aps(self):
-        """
-        Detect number of full action potentials and masks for pidx and tidx.
-        """
-        kwargs = self._parse_kwargs_spline({})
-        bidx = utils.find_baseline_indices(self.times, self.aps, **kwargs)
-        tidx = utils.find_take_off_potential_indices(self.times, self.aps,
-                                                     **kwargs)
-        pidx = utils.find_peak_indices(self.times, self.aps, **kwargs)
-        if tidx[0] < bidx[0]:
-            ti = 1
-        else:
-            ti = 0
-        if pidx[0] < bidx[0]:
-            pi = 1
-        else:
-            pi = 0
-        if tidx[-1] > bidx[-1]:
-            tf = -1
-        else:
-            tf = None
-        if pidx[-1] > bidx[-1]:
-            pf = -1
-        else:
-            pf = None
-        self._mask_tidx = (ti, tf)
-        self._mask_pidx = (pi, pf)
-        self._n_aps = len(bidx) - 1
+        self._n_aps = len(self._pacing)
 
     def _parse_kwargs_spline(self, kwargs):
         if self.ds is not None:

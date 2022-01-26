@@ -31,7 +31,7 @@ def save_protocol(fn, p, mode='vc'):
         raise ValueError('mode must be either `vc` or `cc`.')
 
 
-def fit_spline(times, aps, ds=1, k=4, kwargs={}):
+def fit_spline(times, aps, pacing=None, ds=1, k=4, kwargs={}):
     # Fit and return a scipy.interpolate.UnivariateSpline object.
     #
     # times: (ms) array of time series.
@@ -40,10 +40,32 @@ def fit_spline(times, aps, ds=1, k=4, kwargs={}):
     # k: degree of the spline.
     # kwargs: keyword arguments for scipy.interpolate.UnivariateSpline.
     #
-    return UnivariateSpline(times[::ds], aps[::ds], k=k, **kwargs)
+    if pacing is None:
+        return UnivariateSpline(times[::ds], aps[::ds], k=k, **kwargs)
+    else:
+        out = []
+        for i in range(len(pacing)):
+            idx_i = np.argmin(np.abs(times - pacing[i]))
+            if i == len(pacing) - 1:
+                idx_f = -1
+            else:
+                idx_f = np.argmin(np.abs(times - pacing[i + 1]))
+            idx_p = np.argmax(aps[idx_i:idx_f])
+            out.append(
+                UnivariateSpline(
+                    times[idx_p:idx_f:ds],
+                    aps[idx_p:idx_f:ds],
+                    k=k,
+                    **kwargs
+                )
+            )
+        return out
 
 
-def find_baseline(aps, percentile=5):
+
+
+
+def find_baseline(aps, percentile=1):
     # Return an estimate of the baseline value for the action potentials.
     #
     # aps: array of action potentials.
@@ -53,7 +75,7 @@ def find_baseline(aps, percentile=5):
     return np.percentile(aps, percentile)
 
 
-def find_baseline_indices(times, aps, spl=None, percentile=2, ds=1,
+def find_baseline_indices(times, aps, spl=None, percentile=1, ds=1,
                           min_t=MIN_T):
     # Return the indices of the baseline for the action potentials.
     #
@@ -82,7 +104,7 @@ def find_baseline_indices(times, aps, spl=None, percentile=2, ds=1,
     return base_idx
 
 
-def find_peak(aps, percentile=95):
+def find_peak(aps, percentile=99):
     # Return an estimate of the peak value for the action potentials.
     #
     # aps: array of action potentials.
@@ -92,7 +114,7 @@ def find_peak(aps, percentile=95):
     return np.percentile(aps, percentile)
 
 
-def find_peak_indices(times, aps, spl=None, percentile=95, ds=1, min_t=MIN_T):
+def find_peak_indices(times, aps, spl=None, percentile=99, ds=1, min_t=MIN_T):
     # Return the indices of the peak for the action potentials.
     #
     # times: (ms) array of time series.
@@ -120,7 +142,7 @@ def find_peak_indices(times, aps, spl=None, percentile=95, ds=1, min_t=MIN_T):
 
 
 def find_take_off_potential_indices(times, aps, spl=None, method='slope', ds=1,
-                                    min_t=MIN_T):
+                                    min_t=MIN_T, pacing=None):
     # Return the indices of the take-off-potential for the action potentials.
     #
     # times: (ms) array of time series.
@@ -131,6 +153,11 @@ def find_take_off_potential_indices(times, aps, spl=None, method='slope', ds=1,
     # ds: downsampling factor when fitting splines.
     # min_t: (ms) Duration which two peaks are not expected to occur.
     #
+    if pacing is not None:
+        top_idx = []
+        for p in pacing:
+            top_idx.append(np.argmin(np.abs(times - p)))
+        return top_idx
 
     if spl is None:
         spl = fit_spline(times, aps, ds=ds)
@@ -159,7 +186,7 @@ def find_take_off_potential_indices(times, aps, spl=None, method='slope', ds=1,
             x = (b2 - b1) / (m1 - m2)
             top_idx.append(np.searchsorted(times, x, side='left'))
     elif method == 'slope':
-        thres = 0.1  # following https://doi.org/10.1073/pnas.1308477110
+        thres = 0.2  # following https://doi.org/10.1073/pnas.1308477110
         for bi, pf in zip(base_idx, peak_idx):
             t = times[bi:pf]
             dvdt = spl(t, 1)
