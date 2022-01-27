@@ -2,6 +2,7 @@
 import sys
 sys.path.append('..')
 import os
+from collections import OrderedDict
 import numpy as np
 import pints
 import pyoed
@@ -22,30 +23,27 @@ model_file_list = [
     '../mmt/tomek-2019.mmt',
 ]
 
-design_list = {
-    'LSA-A':(pyoed.LocalSensitivityDesignMeasure, pyoed.A_criterion),
-    'LSA-D':(pyoed.LocalSensitivityDesignMeasure, pyoed.D_criterion),
-    'LSA-E':(pyoed.LocalSensitivityDesignMeasure, pyoed.Estar_criterion),
-    'GSA-A':(pyoed.GlobalSensitivityDesignMeasure, pyoed.A_criterion),
-    'GSA-D':(pyoed.GlobalSensitivityDesignMeasure, pyoed.D_criterion),
-    'GSA-E':(pyoed.GlobalSensitivityDesignMeasure, pyoed.Estar_criterion),
-#    'Shannon':(ShannonDesignMeasure, [1, 1, 0, 1]),
-}
+design_list = OrderedDict(
+    LSA_A=(pyoed.LocalSensitivityDesignMeasure, pyoed.A_criterion),
+    LSA_D=(pyoed.LocalSensitivityDesignMeasure, pyoed.D_criterion),
+    LSA_E=(pyoed.LocalSensitivityDesignMeasure, pyoed.Estar_criterion),
+    GSA_A=(pyoed.GlobalSensitivityDesignMeasure, pyoed.A_criterion),
+    GSA_D=(pyoed.GlobalSensitivityDesignMeasure, pyoed.D_criterion),
+    GSA_E=(pyoed.GlobalSensitivityDesignMeasure, pyoed.Estar_criterion),
+#    Shannon=(ShannonDesignMeasure, [1, 1, 0, 1]),
+)
 
-n_samples = 512  # number of samples to be compared
+n_samples = 32  # number of samples to be compared
 n_steps = 20  # number of steps of the protocol
 dt = 0.1  # ms
 seed_id = 101  # random seed
 
-model_side = ['TNNP', 'Fink', 'Grandi', 'O\'Hara', 'CiPA', 'Tomek']
-measure_side = ['LSA A', 'LSA D', 'LSA E', 'GSA A', 'GSA D', 'GSA E',]
-#                'Shannon']
-
 opt_models = ['ohara-2011', 'model-list']
-opt_measures = ['LSA-A', 'LSA-D', 'LSA-E', 'GSA-A', 'GSA-D', 'GSA-E',]
+opt_measures = ['LSA-A', 'LSA-D', 'LSA-E',]
+#                'GSA-A', 'GSA-D', 'GSA-E',]
 #                'Shannon']
 
-savedir = './cross-criteria-evaluate'
+savedir = './cross-criteria-evaluate-cc'
 if not os.path.isdir(savedir):
     os.makedirs(savedir)
 
@@ -55,8 +53,8 @@ model_list = []
 log_model_list = []
 # NOTE: Transform for GSA, not for LSA!
 for model_file in model_file_list:
-    model_list.append(method.model.VCModel(model_file, transform=None, dt=dt, n_steps=n_steps))
-    log_model_list.append(method.model.VCModel(model_file, transform=np.exp, dt=dt, n_steps=n_steps))
+    model_list.append(method.model.CCModel(model_file, transform=None, dt=dt, n_steps=n_steps))
+    log_model_list.append(method.model.CCModel(model_file, transform=np.exp, dt=dt, n_steps=n_steps))
 
 # Model parameter bounds
 logp_lower = [-2] * len(method.model.parameters)  # maybe +/-3
@@ -74,7 +72,7 @@ lsa_h = 1e-3
 boundaries = np.array([logp_lower, logp_upper]).T
 
 
-# Create scores shape (model_side, measure_side)
+# Create scores shape (model_file_list, design_list)
 score_matrix = []
 # Single models
 for i_model in range(len(model_list)):
@@ -125,7 +123,7 @@ score_matrix.append(score_list)
 for opt_model in opt_models:
     for opt_measure in opt_measures:
         # Load protocol
-        opt_file = '../design/out/' + opt_measure + '-vc-' + opt_model \
+        opt_file = '../design/out/' + opt_measure + '-cc-' + opt_model \
                 + '/opt-prt-run0-rank0.txt'
         try:
             all_p = np.loadtxt(opt_file)
@@ -134,7 +132,6 @@ for opt_model in opt_models:
 
         # Reshape it to [step_1_voltage, step_1_duration, ...]
         all_p = all_p.flatten().round()
-        times = np.arange(0, np.sum(all_p[1::2]), dt)  # ms
 
         # Compute score
         # Score matrix *per optimal protocol*
