@@ -4,7 +4,7 @@ sys.path.append('..')
 import matplotlib.pyplot as plt
 import numpy as np
 import method.utils as utils
-from method.model import CCModel
+from method.model import CCModel, CCBiomarkerModel
 from method.biomarkers import BiomarkerExtractor
 
 ds = 1  # downsampling factor when fitting splines
@@ -15,6 +15,7 @@ ds = 1  # downsampling factor when fitting splines
 f = '../mmt/tomek-2019.mmt'
 n_steps = 0
 dt = 0.1
+pacing = [50]
 
 model = CCModel(
     f,
@@ -22,11 +23,15 @@ model = CCModel(
     dt=dt,
     n_steps=n_steps,
 )
+model.design(pacing[1:])
+
+model_biomarker = CCBiomarkerModel(
+    f,
+    transform=None,
+    dt=dt,
+)
 
 parameters = [1] * model.n_parameters()
-
-pacing = [50]
-model.design(pacing[1:])
 pacing = np.cumsum(pacing)
 
 times = model.times()
@@ -41,6 +46,8 @@ print('Available biomarkers: ', biomarkers)
 extracted = extractor.extract()
 for b in biomarkers:
     print(b, extracted[b])
+
+print(model_biomarker.simulate(parameters))
 
 # Set up plot
 plt.figure(figsize=(7, 4))

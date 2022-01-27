@@ -8,6 +8,7 @@ import pyoed
 import myokit
 
 from method.default import *
+from method.biomarkers import BiomarkerExtractor
 
 vhold = -80  # mV
 
@@ -172,6 +173,7 @@ class CCModel(pints.ForwardModel, pyoed.ForwardModel):
         self.simulation.set_protocol(protocol)
         del(protocol)
         self._times = np.arange(0, duration, self.dt)
+        self._pacing = np.cumsum(np.append(50, variables))
 
     def design_with_amplitude(self, variables):
         # Assume protocol p is
@@ -287,6 +289,96 @@ class CCModel(pints.ForwardModel, pyoed.ForwardModel):
             # Actually it should not be here but in
             # the error function...
             raise NotImplementedError
+
+
+class CCBiomarkerModel(CCModel):
+    """
+    # A current clamp (CC) model with biomarkers as output, linking Myokit and
+    # Pints, PyOED ForwardModel.
+    """
+
+    def __init__(self, *args, **kwargs):
+        kwargs['n_steps'] = 0
+        super().__init__(*args, **kwargs)
+        self.design([])
+        self._biomarkers = BiomarkerExtractor()
+
+    def set_biomarker_list(self, list_of_biomarkers):
+        self._biomarkers.set_biomarker_list(list_of_biomarkers)
+
+    def extract(self):
+        """
+        Extract biomarkers of the action potentials.
+        """
+        d = np.full(len(self._biomarkers.list_of_biomarkers), np.nan)
+        for i, k in enumerate(self._biomarkers.list_of_biomarkers):
+            v = self._biomarkers.BIOMARKERS[k]
+            d[i] = v()[0]
+        return d
+
+    def simulate(self, parameter, times=None):
+        aps = self._simulate(parameter, times=times)
+        self._biomarkers.set_data(self._pacing, self.times(), aps)
+        return self.extract()
+
+    def _simulate(self, parameter, times=None, extra_log=[]):
+        """
+        Generate APs using the given scalings.
+        """
+        parameter = np.array(parameter)
+
+        # Update model parameters
+        if self.transform is not None:
+            parameter = self.transform(parameter)
+        # Simulate with modified model
+        for i, name in enumerate(self._conductance):
+            self.presimulation.set_constant(name,
+                    parameter[i] * self.original[i])
+            self.simulation.set_constant(name,
+                    parameter[i] * self.original[i])
+
+        # Set states
+        if self._use_init_state:
+            # Use a previously simulated states
+            state_to_set = self._init_state
+        else:
+            self.presimulation.reset()
+            # As myokit.org specified, in AP simulation mode, simulation.pre()
+            # sorts the end of simulation state as the new default state, so
+            # simulation.reset() only reset to the 'new' default state. It need
+            # a manual reset of the state using simulation.set_state() to the
+            # originally stored state.
+            self.presimulation.set_state(self.original_state)
+            try:
+                # Pre-pace for some beats
+                self.presimulation.pre(self._prepace * self._prepace_cl)
+            except (myokit.SimulationError, myokit.SimulationCancelledError):
+                return np.ones(self._times.shape) * float('inf')
+            # Get the state from pre-pacing
+            state_to_set = self.presimulation.state()
+        self.simulation.reset()
+        self.simulation.set_state(state_to_set)
+
+        # Run simulation
+        try:
+            # Log some beats
+            p = Timeout(self.max_evaluation_time)
+            d = self.simulation.run(np.max(self._times)+1e-2,
+                log_times=self._times,
+                log=[self._voltage_name] + extra_log,
+                progress=p,
+                ).npview()
+            del(p)
+        except (myokit.SimulationError, myokit.SimulationCancelledError):
+            return np.ones(self._times.shape) * float('inf')
+
+        if self.norm:
+            d[self._voltage_name] = self.normalise(d[self._voltage_name])
+
+        if extra_log:
+            return d
+        else:
+            return d[self._voltage_name]
 
 
 class VCModel(pints.ForwardModel, pyoed.ForwardModel):

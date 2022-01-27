@@ -366,8 +366,11 @@ class BiomarkerExtractor(object):
         """
         Extract resting membrane potential.
         """
-        assert(self._iidx[0] > 0)
-        return np.mean(self.aps[:self._iidx[0]])
+        assert(self._iidx[0] > 50)
+        rmp = []
+        for ii in self._iidx:
+            rmp.append(np.mean(self.aps[ii-50:ii]))
+        return rmp
 
     def t2p(self, kwargs={}):
         """
