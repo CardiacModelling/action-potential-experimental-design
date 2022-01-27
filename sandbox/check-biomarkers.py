@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 import sys
-import matplotlib.pyplot as plt
 sys.path.append('..')
+import matplotlib.pyplot as plt
+import numpy as np
 import method.utils as utils
 from method.model import CCModel
 from method.biomarkers import BiomarkerExtractor
@@ -12,7 +13,7 @@ ds = 1  # downsampling factor when fitting splines
 #f = '../mmt/ohara-2011.mmt'
 #f = '../mmt/cipa-2017.mmt'
 f = '../mmt/tomek-2019.mmt'
-n_steps = 1
+n_steps = 0
 dt = 0.1
 
 model = CCModel(
@@ -24,8 +25,9 @@ model = CCModel(
 
 parameters = [1] * model.n_parameters()
 
-pacing = [50, 1000]
+pacing = [50]
 model.design(pacing[1:])
+pacing = np.cumsum(pacing)
 
 times = model.times()
 aps = model.simulate(parameters, times)
