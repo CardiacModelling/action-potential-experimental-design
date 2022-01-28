@@ -49,7 +49,7 @@ opt_models = ['ohara-2011', 'model-list']
 opt_measures = ['LSA-A', 'LSA-D', 'LSA-E', 'GSA-A', 'GSA-D', 'GSA-E',]
 #                'Shannon']
 
-savedir = './practicality-mcmc'
+savedir = './practicality-mcmc-bm'
 if not os.path.isdir(savedir):
     os.makedirs(savedir)
 
@@ -62,19 +62,21 @@ times = np.arange(0, np.sum(protocol[1::2]), dt)  # ms
 
 
 # Create true model and synthetic data
-model_true = method.model.VCModel(info.true_model_file, transform=None, dt=dt, n_steps=n_steps)
+model_true = method.model.CCBiomarkerModel(info.true_model_file, transform=None, dt=dt)
+times = model_true.times()
 parameters_true = np.ones(model_true.n_parameters())
-model_true.set_voltage_protocol(protocol)
-data = model_true.simulate(parameters_true, times)
-data += np.random.normal(0, info.noise_sigma, size=data.shape)
+raw_data = model_true._simulate(parameters_true)
+raw_data += np.random.normal(0, info.noise_sigma, size=raw_data.shape)
+model_true._biomarkers.set_data(model_true._pacing, times, raw_data)
+data = model_true.extract()
 if '--debug' in sys.argv:
+    print(model_true._biomarkers.list_of_biomarkers)
+    print(data)
     import matplotlib.pyplot as plt
-    fig, axes = plt.subplots(2, 1, figsize=(6,4), sharex=True)
-    axes[0].plot(times, model_true.voltage(times), c='#7f7f7f')
-    axes[1].plot(times, data)
-    axes[0].set_ylabel('Voltage (mV)')
-    axes[1].set_ylabel('Current (A/F)')
-    axes[1].set_xlabel('Time (ms)')
+    fig, axes = plt.subplots(1, 1, figsize=(6,4), sharex=True)
+    axes.plot(times, raw_data)
+    axes.set_ylabel('Voltage (mV)')
+    axes.set_xlabel('Time (ms)')
     plt.show()
     sys.exit()
 del(model_true)
@@ -86,22 +88,21 @@ print('Estimated noise sigma: ', noise_sigma)
 
 
 # Create fitting model
-model_fit = method.model.VCModel(info.fit_model_file, transform=None, dt=dt, n_steps=n_steps)
-model_fit.set_voltage_protocol(protocol)
+model_fit = method.model.CCBiomarkerModel(info.fit_model_file, transform=None, dt=dt)
 if '--debug2' in sys.argv:
+    print(model_fit._biomarkers.list_of_biomarkers)
+    print(model_fit.simulate(parameters_true))
     import matplotlib.pyplot as plt
-    fig, axes = plt.subplots(2, 1, figsize=(6,4), sharex=True)
-    axes[0].plot(times, model_fit.voltage(times), c='#7f7f7f')
-    axes[1].plot(times, data)
-    axes[1].plot(times, model_fit.simulate(parameters_true, times))
-    axes[0].set_ylabel('Voltage (mV)')
-    axes[1].set_ylabel('Current (A/F)')
-    axes[1].set_xlabel('Time (ms)')
+    fig, axes = plt.subplots(1, 1, figsize=(6,4), sharex=True)
+    axes.plot(times, raw_data)
+    axes.plot(times, model_fit._simulate(parameters_true))
+    axes.set_ylabel('Voltage (mV)')
+    axes.set_xlabel('Time (ms)')
     plt.show()
     sys.exit()
 
 # Create likelihood
-problem = pints.SingleOutputProblem(model_fit, times, data)
+problem = pints.SingleOutputProblem(model_fit, np.arange(len(model_fit._biomarkers.list_of_biomarkers)), data)
 log_likelihood = pints.GaussianKnownSigmaLogLikelihood(problem, noise_sigma)
 log_prior = pints.ComposedLogPrior(
     *([pints.LogNormalLogPrior(0, 0.5)] * problem.n_parameters())
@@ -147,9 +148,9 @@ pints.plot.trace(chains_final, ref_parameters=parameters_true)
 plt.savefig('%s-fig2.png' % saveas)
 plt.close('all')
 
-pints.plot.series(chains_final[0], problem)
-plt.savefig('%s-fig3.png' % saveas)
-plt.close('all')
+#pints.plot.series(chains_final[0], problem)
+#plt.savefig('%s-fig3.png' % saveas)
+#plt.close('all')
 
 # Check convergence using rhat criterion
 print('R-hat:')
