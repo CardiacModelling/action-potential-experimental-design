@@ -55,10 +55,7 @@ if not os.path.isdir(savedir):
 
 
 # Load protocol
-protocol = np.loadtxt(info.protocol_file)
-protocol = protocol.flatten()
-protocol = np.append([-80., 100.], protocol)  # Add 0.1s holding potential
-times = np.arange(0, np.sum(protocol[1::2]), dt)  # ms
+assert(info.protocol_file == 'biomarkers')
 
 
 # Create true model and synthetic data
