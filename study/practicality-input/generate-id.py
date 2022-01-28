@@ -27,10 +27,10 @@ opt_measures = ['LSA-A', 'LSA-D', 'LSA-E', 'GSA-A', 'GSA-D', 'GSA-E',]
 #                'Shannon']
 
 
-def get_prt(opt_measure, opt_model):
+def get_prt(opt_measure, opt_model, mode='vc'):
     # Return protocol directory
     i = 0
-    prt = '../design/out/' + opt_measure + '-vc-' + opt_model \
+    prt = '../design/out/' + opt_measure + '-' + mode + '-' + opt_model \
             + '/opt-prt-run0-rank0.txt'
     return prt
 
@@ -44,7 +44,7 @@ def write(f, run_id, true, fit, prt, noise):
     f.write('noise_sigma = ' + str(noise))
 
 
-def generate(true, fit, opt_models, opt_measures, int_id, ii=''):
+def generate(true, fit, opt_models, opt_measures, int_id, ii='', mode='vc'):
     # Generate "id_[run_id].py" file for all combinations of `opt_models` and
     # `opt_measures` for the given `true` and `fit` models.
     # 
@@ -57,7 +57,7 @@ def generate(true, fit, opt_models, opt_measures, int_id, ii=''):
         for opt_measure in opt_measures:
             run_id = '%03d' % int_id
             row.append(int_id)
-            prt = get_prt(opt_measure, opt_model)
+            prt = get_prt(opt_measure, opt_model, mode=mode)
             with open('id_%s.py' % run_id, 'w') as f:
                 write(f, run_id, ftrue, ffit, prt, noise_sigma[true])
             int_id += 1
