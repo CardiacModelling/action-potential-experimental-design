@@ -359,7 +359,11 @@ class BiomarkerExtractor(object):
             t = self.times[pi:fi]
             idx = np.where(np.abs(self._spl(t, 1)) < thr)[0]  # 1 means first derivative
             dt = self.times[idx[1:]] - self.times[idx[:-1]]
-            pd.append(np.sum(dt[np.abs(dt - np.min(dt)) < 1e-4]))
+            try:
+                d = np.sum(dt[np.abs(dt - np.min(dt)) < 1e-4])
+            except ValueError:
+                d = np.nan
+            pd.append(d)
         return pd
 
     def rmp(self, kwargs={}):

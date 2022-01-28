@@ -35,7 +35,7 @@ design_list = OrderedDict(
 
 n_samples = 32  # number of samples to be compared
 n_steps = 20  # number of steps of the protocol
-dt = 0.1  # ms
+dt = 1  # ms
 seed_id = 101  # random seed
 
 opt_models = ['ohara-2011', 'model-list']
@@ -91,7 +91,7 @@ for i_model in range(len(model_list)):
             method_kw = dict(n_samples=n_samples)
             design = d(model, boundaries, criterion=c, method=sensitivity_method,
                        method_kw=method_kw)
-            design.set_n_batches(int(n_samples / 2**8))
+            # design.set_n_batches(int(n_samples / 2**8))
         score_list.append(design)
     score_matrix.append(score_list)
 
@@ -113,7 +113,7 @@ for n in design_list:
         for model in log_model_list:
             design = d(model, boundaries, criterion=c, method=sensitivity_method,
                        method_kw=method_kw)
-            design.set_n_batches(int(n_samples / 2**8))
+            # design.set_n_batches(int(n_samples / 2**8))
             average_list.append(design)
     score_list.append(pyoed.CombineDesignMeasure(average_list, aggregate=np.mean))
 score_matrix.append(score_list)

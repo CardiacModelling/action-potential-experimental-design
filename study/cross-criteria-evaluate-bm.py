@@ -27,13 +27,14 @@ design_list = OrderedDict(
     LSA_A=(pyoed.LocalSensitivityDesignMeasure, pyoed.A_criterion),
     LSA_D=(pyoed.LocalSensitivityDesignMeasure, pyoed.D_criterion),
     LSA_E=(pyoed.LocalSensitivityDesignMeasure, pyoed.Estar_criterion),
-    GSA_A=(pyoed.GlobalSensitivityDesignMeasure, pyoed.A_criterion),
-    GSA_D=(pyoed.GlobalSensitivityDesignMeasure, pyoed.D_criterion),
-    GSA_E=(pyoed.GlobalSensitivityDesignMeasure, pyoed.Estar_criterion),
-#    Shannon=(ShannonDesignMeasure, [1, 1, 0, 1]),
+    #GSA_A=(pyoed.GlobalSensitivityDesignMeasure, pyoed.A_criterion),
+    #GSA_D=(pyoed.GlobalSensitivityDesignMeasure, pyoed.D_criterion),
+    #GSA_E=(pyoed.GlobalSensitivityDesignMeasure, pyoed.Estar_criterion),
+    #Shannon=(ShannonDesignMeasure, [1, 1, 0, 1]),
 )
 
 n_samples = 32  # number of samples to be compared
+n_steps = 0  # ?
 dt = 0.1  # ms
 seed_id = 101  # random seed
 
@@ -85,7 +86,7 @@ for i_model in range(len(model_list)):
             method_kw = dict(n_samples=n_samples)
             design = d(model, boundaries, criterion=c, method=sensitivity_method,
                        method_kw=method_kw)
-            design.set_n_batches(int(n_samples / 2**8))
+            # design.set_n_batches(int(n_samples / 2**8))
         score_list.append(design)
     score_matrix.append(score_list)
 
@@ -107,7 +108,7 @@ for n in design_list:
         for model in log_model_list:
             design = d(model, boundaries, criterion=c, method=sensitivity_method,
                        method_kw=method_kw)
-            design.set_n_batches(int(n_samples / 2**8))
+            # design.set_n_batches(int(n_samples / 2**8))
             average_list.append(design)
     score_list.append(pyoed.CombineDesignMeasure(average_list, aggregate=np.mean))
 score_matrix.append(score_list)
@@ -126,5 +127,4 @@ for score_list in score_matrix:
     score_per_prt.append(score_per_prt_per_list)
 
 # Save score matrix
-np.savetxt('%s/score-%s-%s.txt' % (savedir, opt_model, opt_measure),
-        score_per_prt)
+np.savetxt('%s/score-biomarkers-vm.txt' % (savedir), score_per_prt)
