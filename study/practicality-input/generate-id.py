@@ -62,8 +62,8 @@ def generate(true, fit, opt_models, opt_measures, int_id, ii='', mode='vc'):
                 write(f, run_id, ftrue, ffit, prt, noise_sigma[true])
             int_id += 1
         matrix.append(row)
-    np.savetxt('true_%s-fit_%s-row_models-col_measures%s.txt' \
-            % (true, fit, ii), matrix, fmt='%i')
+    np.savetxt('true_%s-fit_%s-row_models-col_measures-%s%s.txt' \
+            % (true, fit, mode, ii), matrix, fmt='%i')
     return int_id
 
 
@@ -73,7 +73,7 @@ int_id = 1
 
 # Loop through all combinations of true and fit models
 for model in models:
-    int_id = generate(model, model, opt_models, opt_measures, int_id)
+    int_id = generate(model, model, opt_models, opt_measures, int_id, mode='vc')
 
 
 # For benchmark protocols
@@ -102,3 +102,22 @@ for true in models:
     int_id += 1
     matrix.append(row)
 np.savetxt('groenendaal-2015.txt', matrix, fmt='%i')
+
+
+# Loop through all combinations of true and fit models
+for model in models:
+    int_id = generate(model, model, opt_models, opt_measures, int_id, mode='cc')
+
+# For benchmark protocols (biomarkers)
+matrix = []
+for true in models:
+    m = model_dir[true]
+    row = []
+    run_id = '%03d' % int_id
+    row.append(int_id)
+    prt = 'biomarkers'
+    with open('id_%s.py' % run_id, 'w') as f:
+        write(f, run_id, m, m, prt, noise_sigma[true])
+    int_id += 1
+    matrix.append(row)
+np.savetxt('biomarkers.txt', matrix, fmt='%i')
