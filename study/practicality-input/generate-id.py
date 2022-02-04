@@ -13,13 +13,22 @@ model_dir = {
     'tomek': '../mmt/tomek-2019.mmt',
 }
 
-noise_sigma = {
+noise_sigma_vc = {
     'tnnp': 0.5,  # bigger current?
     'fink': 0.15,
     'grandi': 0.15,
     'ohara': 0.15,
     'cipa': 0.15,
     'tomek': 0.15,
+}
+
+noise_sigma_cc = {
+    'tnnp': 1,
+    'fink': 1,
+    'grandi': 1,
+    'ohara': 1,
+    'cipa': 1,
+    'tomek': 1,
 }
 
 opt_models = ['ohara-2011', 'model-list']
@@ -52,6 +61,7 @@ def generate(true, fit, opt_models, opt_measures, int_id, ii='', mode='vc'):
     ftrue = model_dir[true]
     ffit = model_dir[fit]
     matrix = []
+    noise_sigma = noise_sigma_vc if mode == 'vc' else noise_sigma_cc
     for opt_model in opt_models:
         row = []
         for opt_measure in opt_measures:
@@ -85,7 +95,7 @@ for true in models:
     row.append(int_id)
     prt = './benchmark-protocols/ch3.txt'
     with open('id_%s.py' % run_id, 'w') as f:
-        write(f, run_id, m, m, prt, noise_sigma[true])
+        write(f, run_id, m, m, prt, noise_sigma_vc[true])
     int_id += 1
     matrix.append(row)
 np.savetxt('ch3.txt', matrix, fmt='%i')
@@ -98,7 +108,7 @@ for true in models:
     row.append(int_id)
     prt = './benchmark-protocols/groenendaal-2015.txt'
     with open('id_%s.py' % run_id, 'w') as f:
-        write(f, run_id, m, m, prt, noise_sigma[true])
+        write(f, run_id, m, m, prt, noise_sigma_vc[true])
     int_id += 1
     matrix.append(row)
 np.savetxt('groenendaal-2015.txt', matrix, fmt='%i')
@@ -117,7 +127,7 @@ for true in models:
     row.append(int_id)
     prt = 'biomarkers'
     with open('id_%s.py' % run_id, 'w') as f:
-        write(f, run_id, m, m, prt, noise_sigma[true])
+        write(f, run_id, m, m, prt, noise_sigma_cc[true])
     int_id += 1
     matrix.append(row)
 np.savetxt('biomarkers.txt', matrix, fmt='%i')
