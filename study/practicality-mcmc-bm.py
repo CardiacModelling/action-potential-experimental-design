@@ -39,7 +39,7 @@ seed_id = 101  # random seed
 np.random.seed(seed_id)
 fit_seed = np.random.randint(0, 2**30)
 np.random.seed(fit_seed)
-n_steps = 20
+n_steps = 0
 
 model_side = ['TNNP', 'Fink', 'Grandi', 'O\'Hara', 'CiPA', 'Tomek']
 measure_side = ['LSA A', 'LSA D', 'LSA E', 'GSA A', 'GSA D', 'GSA E',]
@@ -80,8 +80,8 @@ del(model_true)
 
 
 # Estimate noise
-noise_sigma = np.std(data[:500])
-print('Estimated noise sigma: ', noise_sigma)
+# noise_sigma = np.std(data[:500])
+# print('Estimated noise sigma: ', noise_sigma)
 
 
 # Create fitting model
@@ -100,25 +100,36 @@ if '--debug2' in sys.argv:
 
 # Create likelihood
 problem = pints.SingleOutputProblem(model_fit, np.arange(len(model_fit._biomarkers.list_of_biomarkers)), data)
-log_likelihood = pints.GaussianKnownSigmaLogLikelihood(problem, noise_sigma)
+log_likelihood = pints.GaussianLogLikelihood(problem)
 log_prior = pints.ComposedLogPrior(
-    *([pints.LogNormalLogPrior(0, 0.5)] * problem.n_parameters())
+    *([pints.LogNormalLogPrior(0, 0.15)] * (problem.n_parameters() + 1))
 )
 log_posterior = pints.LogPosterior(log_likelihood, log_prior)
 
-transformation = pints.LogTransformation(problem.n_parameters())
+transformation = pints.LogTransformation(problem.n_parameters() + 1)
 
 # Check log_posterior is not throwing error and deterministic
 for _ in range(3):
-    assert(log_posterior(np.zeros(model_fit.n_parameters())) ==\
-            log_posterior(np.zeros(model_fit.n_parameters())))
+    assert(log_posterior(np.ones(model_fit.n_parameters() + 1)) ==\
+            log_posterior(np.ones(model_fit.n_parameters() + 1)))
+
+# Get samples with finite posteriors from priors
+mcmc_init = []
+for i in range(4):
+    p = np.nan
+    while not np.isfinite(p):
+        x = log_prior.sample(n=1)[0]
+        p = log_posterior(x)
+        print(x, p)
+    mcmc_init.append(x)
+mcmc_init = np.array(mcmc_init)
 
 # Run
 saveas = savedir + '/run_%s' % info.run_id
-mcmc = pints.MCMCController(log_posterior, 4, log_prior.sample(n=4),
+mcmc = pints.MCMCController(log_posterior, 4, mcmc_init,
                             transformation=transformation,
                             method=pints.PopulationMCMC,)
-n_iter = 50000
+n_iter = 40000
 mcmc.set_max_iterations(n_iter)
 mcmc.set_initial_phase_iterations(200)
 mcmc.set_parallel(True)
@@ -137,11 +148,11 @@ pints.io.save_samples('%s-chain.csv' % saveas, *chains)
 chains_final = chains[:, int(0.8 * n_iter)::2, :]
 
 # Plot
-pints.plot.pairwise(chains_final[0], kde=False, ref_parameters=parameters_true)
+pints.plot.pairwise(chains_final[0], kde=False, ref_parameters=np.append(parameters_true, 1))
 plt.savefig('%s-fig1.png' % saveas)
 plt.close('all')
 
-pints.plot.trace(chains_final, ref_parameters=parameters_true)
+pints.plot.trace(chains_final, ref_parameters=np.append(parameters_true, 1))
 plt.savefig('%s-fig2.png' % saveas)
 plt.close('all')
 
