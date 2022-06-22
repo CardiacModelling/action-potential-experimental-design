@@ -36,7 +36,7 @@ if not os.path.isdir(savedir):
 inputdir = './practicality-input'
 
 mt = mf = 'ohara'
-f = '%s/true_%s-fit_%s-row_models-col_measures.txt' \
+f = '%s/true_%s-fit_%s-row_models-col_measures-vc.txt' \
     % (inputdir, mt, mf)
 id_matrix = np.loadtxt(f, dtype=int)
 
