@@ -73,7 +73,7 @@ s = s[:, -lastniter::thinning, :]
 s = s.reshape(-1, s.shape[-1])
 
 all_samples.append(s)
-all_names.append('Chapter 3')
+all_names.append('Lei et al.')
 del(s)
 
 loadas = 'practicality-mcmc/run_%03d' % gro

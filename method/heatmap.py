@@ -124,7 +124,13 @@ def annotate_heatmap(im, data=None, valfmt="{x:.2f}",
     for i in range(data.shape[0]):
         for j in range(data.shape[1]):
             kw.update(color=textcolors[int(im.norm(data[i, j]) > threshold)])
-            text = im.axes.text(j, i, valfmt(data[i, j], None), **kw)
+            if data[i, j] < 1e4:
+                x = valfmt(data[i, j], None)
+            else:
+                e = int(np.log10(data[i, j]))
+                v = data[i, j] / (10 ** e)
+                x = r'${:.1f} \times 10^{:d}$'.format(v, e)
+            text = im.axes.text(j, i, x, **kw)
             texts.append(text)
 
     return texts

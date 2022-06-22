@@ -136,7 +136,7 @@ im1.set_clim(clim)
 
 im2, _ = heatmap.heatmap(averaged_bench_rank,
                          ['Benchmark'],
-                         ['Chapter 3', 'Groenendaal et al.'],
+                         ['Lei et al.', 'Groenendaal et al.'],
                          ax=ax2, cmap='viridis_r', cbarlabel=None,
                          rotation=-15)
 _ = heatmap.annotate_heatmap(im2, valfmt='{x:.1f}', threshold=thres)
