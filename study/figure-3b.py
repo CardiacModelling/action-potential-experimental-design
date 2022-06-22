@@ -34,7 +34,7 @@ if not os.path.isdir(savedir):
 inputdir = './practicality-input'
 
 mt = mf = 'ohara'
-f = '%s/true_%s-fit_%s-row_models-col_measures.txt' \
+f = '%s/true_%s-fit_%s-row_models-col_measures-vc.txt' \
     % (inputdir, mt, mf)
 id_matrix = np.loadtxt(f, dtype=int)
 
@@ -60,7 +60,9 @@ for ii, model in enumerate(model_side):
         s = np.array(pints.io.load_samples('%s-chain.csv' % loadas, n=3))
         s = s[:, -lastniter::thinning, :]
         s = s.reshape(-1, s.shape[-1])
-        std = np.mean(np.std(s, axis=0))
+        # std = np.mean(np.std(s, axis=0))
+        # Calculat RMSE
+        std = np.mean(np.sqrt(np.mean((s - 1)**2, axis=0)))
 
         row_std.append(std)
     all_std.append(row_std)
@@ -70,14 +72,18 @@ loadas = 'practicality-mcmc/run_%03d' % ch3
 s = np.array(pints.io.load_samples('%s-chain.csv' % loadas, n=3))
 s = s[:, -lastniter::thinning, :]
 s = s.reshape(-1, s.shape[-1])
-std = np.mean(np.std(s, axis=0))
+# std = np.mean(np.std(s, axis=0))
+# Calculat RMSE
+std = np.mean(np.sqrt(np.mean((s - 1)**2, axis=0)))
 benchmark.append(std)
 
 loadas = 'practicality-mcmc/run_%03d' % gro
 s = np.array(pints.io.load_samples('%s-chain.csv' % loadas, n=3))
 s = s[:, -lastniter::thinning, :]
 s = s.reshape(-1, s.shape[-1])
-std = np.mean(np.std(s, axis=0))
+# std = np.mean(np.std(s, axis=0))
+# Calculat RMSE
+std = np.mean(np.sqrt(np.mean((s - 1)**2, axis=0)))
 benchmark.append(std)
 del(s)
 
@@ -113,7 +119,7 @@ im2.set_clim(clim)
 #fig.subplots_adjust(right=0.9)
 #cbar_ax = fig.add_axes([0.925, 0.15, 0.05, 0.8])
 cbar = fig.colorbar(im1, ax=axes.ravel().tolist())
-cbar.ax.set_ylabel(r'Averaged posterior standard deviation $\times10^3$', rotation=-90, va="bottom")
+cbar.ax.set_ylabel(r'Averaged posterior RMSE $\times10^3$', rotation=-90, va="bottom")
 
 fig.savefig('%s/fig3b.pdf' % (savedir), format='pdf', bbox_inches='tight')
 plt.close('all')

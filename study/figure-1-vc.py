@@ -89,7 +89,7 @@ for i, opt_model in enumerate(opt_models):
         elif j == 3:
             ax2.set_ylabel('Current\n(A/F)', color='C3')
 
-axes[-1, 1].set_xlabel('\nTime (5000 ms)')
+    axes[-1, i].set_xlabel('\nTime (each tick = 5s)')
 axes[3, 0].set_ylabel('Voltage\n(mV)', color='#7f7f7f')
 for j in range(len(opt_measures)):
     axes[j, 0].text(-0.5, 0.5, measure_side[j],

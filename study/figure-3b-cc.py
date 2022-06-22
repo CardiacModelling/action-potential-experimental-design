@@ -35,13 +35,21 @@ if not os.path.isdir(savedir):
 
 inputdir = './practicality-input'
 
+skip_chain = {  # ID, chain ID
+    '123': [1],
+    #'166': [0],
+}
+
 mt = mf = 'ohara'
 f = '%s/true_%s-fit_%s-row_models-col_measures-cc.txt' \
     % (inputdir, mt, mf)
 id_matrix = np.loadtxt(f, dtype=int)
 
 f = '%s/biomarkers.txt' % inputdir
-bm = np.loadtxt(f, dtype=int)[3]
+bm = '%03d' % np.loadtxt(f, dtype=int)[3]
+
+f = '%s/1hz.txt' % inputdir
+hz1 = '%03d' % np.loadtxt(f, dtype=int)[3]
 
 
 # Go through designs
@@ -57,21 +65,39 @@ for ii, model in enumerate(model_side):
         # Load samples
         loadas = 'practicality-mcmc-cc/run_%s' % run_id
         s = np.array(pints.io.load_samples('%s-chain.csv' % loadas, n=3))
+        if run_id in skip_chain.keys():
+            s = np.delete(s, skip_chain[run_id], axis=0)
         s = s[:, -lastniter::thinning, :]
         s = s.reshape(-1, s.shape[-1])
-        std = np.mean(np.std(s, axis=0))
+        # std = np.mean(np.std(s, axis=0))
+        # Calculat RMSE
+        std = np.mean(np.sqrt(np.mean((s - 1)**2, axis=0)))
+        del(s)
 
         row_std.append(std)
     all_std.append(row_std)
 
 benchmark = []
-loadas = 'practicality-mcmc-bm/run_%03d' % bm
+loadas = 'practicality-mcmc-bm/run_%s' % bm
 s = np.array(pints.io.load_samples('%s-chain.csv' % loadas, n=3))
 s = s[:, -lastniter::thinning, :]
 s = s.reshape(-1, s.shape[-1])
-std = np.mean(np.std(s, axis=0))
+# std = np.mean(np.std(s, axis=0))
+# Calculat RMSE
+std = np.mean(np.sqrt(np.mean((s - 1)**2, axis=0)))
 benchmark.append(std)
+del(s)
 
+loadas = 'practicality-mcmc-cc/run_%s' % hz1
+s = np.array(pints.io.load_samples('%s-chain.csv' % loadas, n=3))
+if hz1 in skip_chain.keys():
+    s = np.delete(s, skip_chain[hz1], axis=0)
+s = s[:, -lastniter::thinning, :]
+s = s.reshape(-1, s.shape[-1])
+# std = np.mean(np.std(s, axis=0))
+# Calculat RMSE
+std = np.mean(np.sqrt(np.mean((s - 1)**2, axis=0)))
+benchmark.append(std)
 del(s)
 
 all_std = np.asarray(all_std) * 1e3
@@ -82,8 +108,8 @@ benchmark = np.asarray(benchmark).reshape(1, -1) * 1e3
 clim = (np.min(all_std), np.max(all_std))
 thres = clim[0] + (clim[1] - clim[0]) * 0.6
 
-fig, axes = plt.subplots(2, 1, gridspec_kw={'height_ratios': [7, 2]},
-                               figsize=(6, 4))
+fig, axes = plt.subplots(2, 1, gridspec_kw={'height_ratios': [6, 3]},
+                               figsize=(6, 3.5))
 ax1, ax2 = axes
 
 im1, _ = heatmap.heatmap(all_std, opt_model_labels, measure_side,
@@ -95,9 +121,9 @@ im1.set_clim(clim)
 
 im2, _ = heatmap.heatmap(benchmark,
                          ['Benchmark'],
-                         ['Biomarkers (VC only)'],
+                         ['Biomarkers (VC only)', '1 Hz'],
                          ax=ax2, cmap='YlGn', cbarlabel=None,
-                         rotation=-15)
+                         rotation=0)
 _ = heatmap.annotate_heatmap(im2, valfmt='{x:.1f}', threshold=thres)
 im2.set_clim(clim)
 
@@ -106,7 +132,7 @@ im2.set_clim(clim)
 #fig.subplots_adjust(right=0.9)
 #cbar_ax = fig.add_axes([0.925, 0.15, 0.05, 0.8])
 cbar = fig.colorbar(im1, ax=axes.ravel().tolist())
-cbar.ax.set_ylabel(r'Averaged posterior standard deviation $\times10^3$', rotation=-90, va="bottom")
+cbar.ax.set_ylabel(r'Averaged posterior RMSE $\times10^3$', rotation=-90, va="bottom")
 
 fig.savefig('%s/fig3b-cc.pdf' % (savedir), format='pdf', bbox_inches='tight')
 plt.close('all')

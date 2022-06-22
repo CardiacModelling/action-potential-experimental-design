@@ -13,7 +13,7 @@ import method.model
 
 # Settings
 n_steps = 20  # number of steps of the protocol
-dt = 5  # ms
+dt = 0.1  # ms
 
 model_side = ['Single model', 'Averaged model']
 measure_side = ['LSA A', 'LSA D', 'LSA E',]
@@ -45,7 +45,7 @@ parameters = np.ones(model.n_parameters())
 
 # Get optimal protocols and plot
 fig, axes = plt.subplots(len(opt_measures), len(opt_models), sharey=True,
-                         figsize=(7, 8))
+                         figsize=(7, 4))
 
 for i, opt_model in enumerate(opt_models):
     for j, opt_measure in enumerate(opt_measures):
@@ -77,8 +77,20 @@ for i, opt_model in enumerate(opt_models):
 
         # Plot
         color = '#7f7f7f'
-        axes[j, i].plot(np.cumsum(all_p), np.ones(len(all_p)), 'o', c=color)
+        stim = np.append(50, all_p)
+        stim += model._stim_dur
+        stim = np.cumsum(stim)
+        stim_c = np.zeros(times.shape)
+        #for s in stim:
+        #    #print(np.max(times), np.min(times), len(times), s, model._stim_dur)
+        #    stim_c[((times > (s - model._stim_dur)) & (times < s))] = 1
+        #axes[j, i].plot(times, stim_c, '-', c=color)
+        for s in stim:
+            axes[j, i].plot([s - model._stim_dur] * 2, [0.1, 0.7], c=color)
         axes[j, i].tick_params(axis='y', labelcolor=color)
+        
+        axes[j, i].set_ylim((-2.5, 1.1))
+        axes[j, i].set_yticks([])
 
         # Twinx: current
         ax2 = axes[j, i].twinx()
@@ -89,16 +101,16 @@ for i, opt_model in enumerate(opt_models):
         color = 'C3'
         ax2.plot(times, s, c=color)
         ax2.tick_params(axis='y', labelcolor=color)
-        # ax2.set_ylim((-5, 3))
+        ax2.set_ylim((-105, 165))
         if i != len(opt_models) - 1:
             ax2.tick_params(axis='y', labelright=False)
-        elif j == 3:
+        elif j == 1:
             ax2.set_ylabel('Voltage\n(mV)', color='C3')
 
-axes[-1, 1].set_xlabel('\nTime (5000 ms)')
+    axes[-1, i].set_xlabel('\nTime (each tick = 5s)')
 axes[1, 0].set_ylabel('Pacing', color='#7f7f7f')
 for j in range(len(opt_measures)):
-    axes[j, 0].text(-0.5, 0.5, measure_side[j],
+    axes[j, 0].text(-0.15, 0.5, measure_side[j],
                     transform=axes[j, 0].transAxes, ha='center', va='center',
                     rotation=90)
 fig.tight_layout()

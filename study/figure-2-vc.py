@@ -14,7 +14,7 @@ import method.heatmap as heatmap  # heap map helper function
 
 
 # Settings
-model_side = ['TNNP', 'Fink', 'Grandi', 'OHara', 'Chang', 'Tomek', 'Averaged']
+model_side = ['TNNP', 'Fink', 'OHara', 'Chang', 'Tomek', 'Averaged']
 measure_side = ['LSA A', 'LSA D', 'LSA E', 'GSA A', 'GSA D', 'GSA E',]
 #                'Shannon']
 
@@ -87,7 +87,8 @@ for i, opt_model in enumerate(opt_models):
         clim = (0, 100.)
         thres = (clim[1] - clim[0]) * 0.6
         im.set_clim(clim)
-        texts = heatmap.annotate_heatmap(im, valfmt='{x:.1f}', threshold=thres)
+        texts = heatmap.annotate_heatmap(im, valfmt='{x:.1f}', threshold=thres,
+                fontsize=8)
         fig.tight_layout()
         fig.savefig('%s/opt-protocol-%s-%s.pdf' % (savedir, opt_model,
             opt_measure), format='pdf', bbox_inches='tight')
@@ -100,7 +101,8 @@ for i, bench in enumerate(benchmark_name):
     clim = (0, 100.)
     thres = (clim[1] - clim[0]) * 0.6
     im.set_clim(clim)
-    texts = heatmap.annotate_heatmap(im, valfmt='{x:.1f}', threshold=thres)
+    texts = heatmap.annotate_heatmap(im, valfmt='{x:.1f}', threshold=thres,
+                fontsize=8)
     fig.tight_layout()
     fig.savefig('%s/opt-protocol-%s.pdf' % (savedir, bench), format='pdf',
             bbox_inches='tight')

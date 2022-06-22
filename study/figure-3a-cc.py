@@ -16,6 +16,10 @@ from method.model import parameter_names as parameters_nice
 
 
 to_plot = [10, 9, -2, -1]  # best two and worst two
+skip_chain = {  # ID, chain ID
+    '123': [1],
+    #'166': [0],
+}
 
 # Settings
 model_side = ['Single', 'Averaged']
@@ -43,7 +47,10 @@ f = '%s/true_%s-fit_%s-row_models-col_measures-cc.txt' \
 id_matrix = np.loadtxt(f, dtype=int)
 
 f = '%s/biomarkers.txt' % inputdir
-bm = np.loadtxt(f, dtype=int)[3]
+bm = '%03d' % np.loadtxt(f, dtype=int)[3]
+
+f = '%s/1hz.txt' % inputdir
+hz1 = '%03d' % np.loadtxt(f, dtype=int)[3]
 
 
 # Go through designs
@@ -51,22 +58,8 @@ all_samples = []
 all_names = []
 lastniter = 10000
 thinning = 10
-for ii, model in enumerate(model_side):
-    for jj, measure in enumerate(measure_side):
-        int_id = id_matrix[ii, jj]
-        run_id = '%03d' % int_id
 
-        # Load samples
-        loadas = 'practicality-mcmc-cc/run_%s' % run_id
-        s = np.array(pints.io.load_samples('%s-chain.csv' % loadas, n=2))
-        s = s[:, -lastniter::thinning, :]
-        s = s.reshape(-1, s.shape[-1])
-
-        all_samples.append(s)
-        all_names.append(model + ', ' + measure)
-        del(s)
-
-loadas = 'practicality-mcmc-bm/run_%03d' % bm
+loadas = 'practicality-mcmc-bm/run_%s' % bm
 s = np.array(pints.io.load_samples('%s-chain.csv' % loadas, n=3))
 s = s[:, -lastniter::thinning, :]
 s = s.reshape(-1, s.shape[-1])
@@ -74,6 +67,35 @@ s = s.reshape(-1, s.shape[-1])
 all_samples.append(s)
 all_names.append('Biomarkers')
 del(s)
+
+loadas = 'practicality-mcmc-cc/run_%s' % hz1
+s = np.array(pints.io.load_samples('%s-chain.csv' % loadas, n=3))
+print( hz1, hz1 in skip_chain.keys())
+if hz1 in skip_chain.keys():
+    s = np.delete(s, skip_chain[hz1], axis=0)
+s = s[:, -lastniter::thinning, :]
+s = s.reshape(-1, s.shape[-1])
+
+all_samples.append(s)
+all_names.append('1 Hz')
+del(s)
+
+for ii, model in enumerate(model_side):
+    for jj, measure in enumerate(measure_side):
+        int_id = id_matrix[ii, jj]
+        run_id = '%03d' % int_id
+
+        # Load samples
+        loadas = 'practicality-mcmc-cc/run_%s' % run_id
+        s = np.array(pints.io.load_samples('%s-chain.csv' % loadas, n=3))
+        if run_id in skip_chain.keys():
+            s = np.delete(s, skip_chain[run_id], axis=0)
+        s = s[:, -lastniter::thinning, :]
+        s = s.reshape(-1, s.shape[-1])
+
+        all_samples.append(s)
+        all_names.append(model + ', ' + measure)
+        del(s)
 
 
 #all_samples = [all_samples[i] for i in to_plot]
