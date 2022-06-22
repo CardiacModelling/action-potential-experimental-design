@@ -17,7 +17,7 @@ import method.model
 model_file_list = [
     '../mmt/tnnp-2004.mmt',
     '../mmt/fink-2008.mmt',
-    '../mmt/grandi-2010.mmt',
+    #'../mmt/grandi-2010.mmt',
     '../mmt/ohara-2011.mmt',
     '../mmt/cipa-2017.mmt',
     '../mmt/tomek-2019.mmt',
@@ -27,15 +27,15 @@ design_list = OrderedDict(
     LSA_A=(pyoed.LocalSensitivityDesignMeasure, pyoed.A_criterion),
     LSA_D=(pyoed.LocalSensitivityDesignMeasure, pyoed.D_criterion),
     LSA_E=(pyoed.LocalSensitivityDesignMeasure, pyoed.Estar_criterion),
-    GSA_A=(pyoed.GlobalSensitivityDesignMeasure, pyoed.A_criterion),
-    GSA_D=(pyoed.GlobalSensitivityDesignMeasure, pyoed.D_criterion),
-    GSA_E=(pyoed.GlobalSensitivityDesignMeasure, pyoed.Estar_criterion),
+    #GSA_A=(pyoed.GlobalSensitivityDesignMeasure, pyoed.A_criterion),
+    #GSA_D=(pyoed.GlobalSensitivityDesignMeasure, pyoed.D_criterion),
+    #GSA_E=(pyoed.GlobalSensitivityDesignMeasure, pyoed.Estar_criterion),
 #    Shannon=(ShannonDesignMeasure, [1, 1, 0, 1]),
 )
 
 n_samples = 32  # number of samples to be compared
 n_steps = 20  # number of steps of the protocol
-dt = 1  # ms
+dt = 5  # ms
 seed_id = 101  # random seed
 
 opt_models = ['ohara-2011', 'model-list']

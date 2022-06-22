@@ -30,13 +30,18 @@ design_list = OrderedDict(
     #GSA_A=(pyoed.GlobalSensitivityDesignMeasure, pyoed.A_criterion),
     #GSA_D=(pyoed.GlobalSensitivityDesignMeasure, pyoed.D_criterion),
     #GSA_E=(pyoed.GlobalSensitivityDesignMeasure, pyoed.Estar_criterion),
-    #Shannon=(ShannonDesignMeasure, [1, 1, 0, 1]),
+#    Shannon=(ShannonDesignMeasure, [1, 1, 0, 1]),
 )
 
 n_samples = 32  # number of samples to be compared
-n_steps = 0  # ?
-dt = 0.1  # ms
+n_steps = 20  # number of steps of the protocol
+dt = 5  # ms
 seed_id = 101  # random seed
+
+opt_models = ['ohara-2011', 'model-list']
+opt_measures = ['LSA-A', 'LSA-D', 'LSA-E',]
+#                'GSA-A', 'GSA-D', 'GSA-E',]
+#                'Shannon']
 
 savedir = './cross-criteria-evaluate-cc'
 if not os.path.isdir(savedir):
@@ -48,8 +53,8 @@ model_list = []
 log_model_list = []
 # NOTE: Transform for GSA, not for LSA!
 for model_file in model_file_list:
-    model_list.append(method.model.CCBiomarkerModel(model_file, transform=None, dt=dt))
-    log_model_list.append(method.model.CCBiomarkerModel(model_file, transform=np.exp, dt=dt))
+    model_list.append(method.model.CCModel(model_file, transform=None, dt=dt, n_steps=n_steps))
+    log_model_list.append(method.model.CCModel(model_file, transform=np.exp, dt=dt, n_steps=n_steps))
 
 # Model parameter bounds
 logp_lower = [-2] * len(method.model.parameters)  # maybe +/-3
@@ -115,16 +120,27 @@ score_matrix.append(score_list)
 
 
 # Get optimal protocols and evaluate the scores
-# Compute score
-# Score matrix *per optimal protocol*
-score_per_prt = []
+for opt_file_name in ['1hz']:
+    # Load protocol
+    opt_file = './benchmark-protocols/' + opt_file_name + '.txt'
+    try:
+        all_p = np.loadtxt(opt_file)
+    except: # OSError
+        continue
 
-for score_list in score_matrix:
-    # Loop over models
-    score_per_prt_per_list = []
-    for score in score_list:
-        score_per_prt_per_list.append(score([]))
-    score_per_prt.append(score_per_prt_per_list)
+    # Reshape it to [step_1_voltage, step_1_duration, ...]
+    all_p = all_p.flatten().round()
 
-# Save score matrix
-np.savetxt('%s/score-biomarkers-vm.txt' % (savedir), score_per_prt)
+    # Compute score
+    # Score matrix *per optimal protocol*
+    score_per_prt = []
+
+    for score_list in score_matrix:
+        # Loop over models
+        score_per_prt_per_list = []
+        for score in score_list:
+            score_per_prt_per_list.append(score(all_p))
+        score_per_prt.append(score_per_prt_per_list)
+
+    # Save score matrix
+    np.savetxt('%s/score-%s.txt' % (savedir, opt_file_name), score_per_prt)

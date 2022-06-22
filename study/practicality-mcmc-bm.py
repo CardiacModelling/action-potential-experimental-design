@@ -80,8 +80,8 @@ del(model_true)
 
 
 # Estimate noise
-# noise_sigma = np.std(data[:500])
-# print('Estimated noise sigma: ', noise_sigma)
+noise_sigma = np.std(raw_data[:500])
+print('Estimated noise sigma: ', noise_sigma)
 
 
 # Create fitting model
@@ -99,19 +99,21 @@ if '--debug2' in sys.argv:
     sys.exit()
 
 # Create likelihood
-problem = pints.SingleOutputProblem(model_fit, np.arange(len(model_fit._biomarkers.list_of_biomarkers)), data)
-log_likelihood = pints.GaussianLogLikelihood(problem)
+model_fit.set_denominators(np.array(data))
+problem = pints.SingleOutputProblem(model_fit, np.arange(len(model_fit._biomarkers.list_of_biomarkers)), np.ones(len(data)))
+# log_likelihood = pints.GaussianLogLikelihood(problem)
+log_likelihood = pints.GaussianKnownSigmaLogLikelihood(problem, noise_sigma / np.std(raw_data))
 log_prior = pints.ComposedLogPrior(
-    *([pints.LogNormalLogPrior(0, 0.15)] * (problem.n_parameters() + 1))
+    *([pints.LogNormalLogPrior(0, 0.15)] * (problem.n_parameters()))# + 1))
 )
 log_posterior = pints.LogPosterior(log_likelihood, log_prior)
 
-transformation = pints.LogTransformation(problem.n_parameters() + 1)
+transformation = pints.LogTransformation(problem.n_parameters())# + 1)
 
 # Check log_posterior is not throwing error and deterministic
 for _ in range(3):
-    assert(log_posterior(np.ones(model_fit.n_parameters() + 1)) ==\
-            log_posterior(np.ones(model_fit.n_parameters() + 1)))
+    assert(log_posterior(np.ones(model_fit.n_parameters())) ==\
+            log_posterior(np.ones(model_fit.n_parameters())))# + 1)))
 
 # Get samples with finite posteriors from priors
 mcmc_init = []
@@ -148,11 +150,11 @@ pints.io.save_samples('%s-chain.csv' % saveas, *chains)
 chains_final = chains[:, int(0.8 * n_iter)::2, :]
 
 # Plot
-pints.plot.pairwise(chains_final[0], kde=False, ref_parameters=np.append(parameters_true, 1))
+pints.plot.pairwise(chains_final[0], kde=False, ref_parameters=parameters_true)#np.append(parameters_true, 1))
 plt.savefig('%s-fig1.png' % saveas)
 plt.close('all')
 
-pints.plot.trace(chains_final, ref_parameters=np.append(parameters_true, 1))
+pints.plot.trace(chains_final, ref_parameters=parameters_true)#np.append(parameters_true, 1))
 plt.savefig('%s-fig2.png' % saveas)
 plt.close('all')
 

@@ -131,3 +131,16 @@ for true in models:
     int_id += 1
     matrix.append(row)
 np.savetxt('biomarkers.txt', matrix, fmt='%i')
+
+matrix = []
+for true in models:
+    m = model_dir[true]
+    row = []
+    run_id = '%03d' % int_id
+    row.append(int_id)
+    prt = './benchmark-protocols/1hz.txt'
+    with open('id_%s.py' % run_id, 'w') as f:
+        write(f, run_id, m, m, prt, noise_sigma_vc[true])
+    int_id += 1
+    matrix.append(row)
+np.savetxt('1hz.txt', matrix, fmt='%i')

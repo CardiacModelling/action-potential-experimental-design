@@ -17,7 +17,7 @@ import method.model
 model_file_list = [
     '../mmt/tnnp-2004.mmt',
     '../mmt/fink-2008.mmt',
-    '../mmt/grandi-2010.mmt',
+    #'../mmt/grandi-2010.mmt',
     '../mmt/ohara-2011.mmt',
     '../mmt/cipa-2017.mmt',
     '../mmt/tomek-2019.mmt',
