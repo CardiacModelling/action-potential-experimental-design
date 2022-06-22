@@ -78,17 +78,25 @@ for i in range(len(model_side)):
 
 
 # Plot score matrix for each optimal protocol
+import matplotlib.patches as patches
 score_rank[~np.isfinite(score_rank)] = 200.  # TODO think about how to handle
 for i, opt_model in enumerate(opt_models):
     for j, opt_measure in enumerate(opt_measures):
         fig, axes = plt.subplots()
         im, cbar = heatmap.heatmap(score_rank[i, j], model_side, measure_side,
-                ax=axes, cmap='YlGn', cbarlabel='Ranking score (%)')
+                ax=axes, cmap='viridis_r', cbarlabel='Ranking score (%)')
         clim = (0, 100.)
         thres = (clim[1] - clim[0]) * 0.6
         im.set_clim(clim)
         texts = heatmap.annotate_heatmap(im, valfmt='{x:.1f}', threshold=thres,
                 fontsize=8)
+        y_opt = (1.5 + i * 3) + 0.05
+        x_opt = (j - 0.5) + 0.05
+        axes.add_patch(patches.Rectangle(
+            (x_opt, y_opt),
+            1. - 0.1, 1. - 0.1,
+            edgecolor='red', fill=False, lw=2
+        ))
         fig.tight_layout()
         fig.savefig('%s/opt-protocol-%s-%s.pdf' % (savedir, opt_model,
             opt_measure), format='pdf', bbox_inches='tight')
@@ -97,7 +105,7 @@ for i, opt_model in enumerate(opt_models):
 for i, bench in enumerate(benchmark_name):
     fig, axes = plt.subplots()
     im, cbar = heatmap.heatmap(bench_rank[i], model_side, measure_side,
-            ax=axes, cmap='YlGn', cbarlabel='Ranking score (%)')
+            ax=axes, cmap='viridis_r', cbarlabel='Ranking score (%)')
     clim = (0, 100.)
     thres = (clim[1] - clim[0]) * 0.6
     im.set_clim(clim)
@@ -120,7 +128,7 @@ fig, axes = plt.subplots(2, 1, gridspec_kw={'height_ratios': [7, 2]},
 ax1, ax2 = axes
 
 im1, _ = heatmap.heatmap(averaged_score_rank, opt_model_labels, measure_side,
-                           ax=ax1, cmap='YlGn',
+                           ax=ax1, cmap='viridis_r',
                            #cbarlabel='Averaged ranking score (%)')
                            cbarlabel=None)
 _ = heatmap.annotate_heatmap(im1, valfmt='{x:.1f}', threshold=thres)
@@ -129,7 +137,7 @@ im1.set_clim(clim)
 im2, _ = heatmap.heatmap(averaged_bench_rank,
                          ['Benchmark'],
                          ['Chapter 3', 'Groenendaal et al.'],
-                         ax=ax2, cmap='YlGn', cbarlabel=None,
+                         ax=ax2, cmap='viridis_r', cbarlabel=None,
                          rotation=-15)
 _ = heatmap.annotate_heatmap(im2, valfmt='{x:.1f}', threshold=thres)
 im2.set_clim(clim)
