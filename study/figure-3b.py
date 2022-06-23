@@ -10,6 +10,9 @@ import pints.io
 
 import method.heatmap as heatmap  # heap map helper function
 
+import seaborn as sns
+cmap = sns.color_palette('flare', as_cmap=True)
+
 #
 # Plot all scores for cross criteria for each protocol.
 #
@@ -100,7 +103,7 @@ fig, axes = plt.subplots(2, 1, gridspec_kw={'height_ratios': [7, 2]},
 ax1, ax2 = axes
 
 im1, _ = heatmap.heatmap(all_std, opt_model_labels, measure_side,
-                           ax=ax1, cmap='YlGn',
+                           ax=ax1, cmap=cmap,
                            #cbarlabel='Averaged ranking score (%)')
                            cbarlabel=None)
 _ = heatmap.annotate_heatmap(im1, valfmt='{x:.1f}', threshold=thres)
@@ -109,7 +112,7 @@ im1.set_clim(clim)
 im2, _ = heatmap.heatmap(benchmark,
                          ['Benchmark'],
                          ['Lei et al.', 'Groenendaal et al.'],
-                         ax=ax2, cmap='YlGn', cbarlabel=None,
+                         ax=ax2, cmap=cmap, cbarlabel=None,
                          rotation=-15)
 _ = heatmap.annotate_heatmap(im2, valfmt='{x:.1f}', threshold=thres)
 im2.set_clim(clim)

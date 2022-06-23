@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import method.heatmap as heatmap  # heap map helper function
 
 import seaborn as sns
-cmap = sns.color_palette("crest", as_cmap=True)
+cmap = sns.color_palette('crest', as_cmap=True)
 
 #
 # Plot all scores for cross criteria for each protocol.
