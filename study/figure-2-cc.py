@@ -8,6 +8,9 @@ import matplotlib.pyplot as plt
 
 import method.heatmap as heatmap  # heap map helper function
 
+import seaborn as sns
+cmap = sns.color_palette("crest", as_cmap=True)
+
 #
 # Plot all scores for cross criteria for each protocol.
 #
@@ -86,7 +89,7 @@ for i, opt_model in enumerate(opt_models):
     for j, opt_measure in enumerate(opt_measures):
         fig, axes = plt.subplots()
         im, cbar = heatmap.heatmap(score_rank[i, j], model_side, measure_side,
-                ax=axes, cmap='viridis_r', cbarlabel='Ranking score (%)')
+                ax=axes, cmap=cmap, cbarlabel='Ranking score (%)')
         clim = (0, 100.)
         thres = (clim[1] - clim[0]) * 0.6
         im.set_clim(clim)
@@ -106,7 +109,7 @@ for i, opt_model in enumerate(opt_models):
 for i, bench in enumerate(benchmark_name):
     fig, axes = plt.subplots()
     im, cbar = heatmap.heatmap(bench_rank[i], model_side, measure_side,
-            ax=axes, cmap='viridis_r', cbarlabel='Ranking score (%)')
+            ax=axes, cmap=cmap, cbarlabel='Ranking score (%)')
     clim = (0, 100.)
     thres = (clim[1] - clim[0]) * 0.6
     im.set_clim(clim)
@@ -129,7 +132,7 @@ fig, axes = plt.subplots(2, 1, gridspec_kw={'height_ratios': [6, 3]},
 ax1, ax2 = axes
 
 im1, _ = heatmap.heatmap(averaged_score_rank, opt_model_labels, measure_side,
-                           ax=ax1, cmap='viridis_r',
+                           ax=ax1, cmap=cmap,
                            #cbarlabel='Averaged ranking score (%)')
                            cbarlabel=None)
 _ = heatmap.annotate_heatmap(im1, valfmt='{x:.1f}', threshold=thres)
@@ -138,7 +141,7 @@ im1.set_clim(clim)
 im2, _ = heatmap.heatmap(averaged_bench_rank,
                          ['Benchmark'],
                          ['Biomarkers (Vm only)', '1 Hz'],#'Groenendaal et al.'],
-                         ax=ax2, cmap='viridis_r', cbarlabel=None,
+                         ax=ax2, cmap=cmap, cbarlabel=None,
                          rotation=0)
 _ = heatmap.annotate_heatmap(im2, valfmt='{x:.1f}', threshold=thres)
 im2.set_clim(clim)
