@@ -91,7 +91,7 @@ for i, opt_model in enumerate(opt_models):
         im, cbar = heatmap.heatmap(score_rank[i, j], model_side, measure_side,
                 ax=axes, cmap=cmap, cbarlabel='Ranking score (%)')
         clim = (0, 100.)
-        thres = (clim[1] - clim[0]) * 0.6
+        thres = (clim[1] - clim[0]) * 0.2 + clim[0]
         im.set_clim(clim)
         texts = heatmap.annotate_heatmap(im, valfmt='{x:.1f}', threshold=thres)
         y_opt = (1.5 + i * 3) + 0.05
@@ -111,7 +111,7 @@ for i, bench in enumerate(benchmark_name):
     im, cbar = heatmap.heatmap(bench_rank[i], model_side, measure_side,
             ax=axes, cmap=cmap, cbarlabel='Ranking score (%)')
     clim = (0, 100.)
-    thres = (clim[1] - clim[0]) * 0.6
+    thres = (clim[1] - clim[0]) * 0.2 + clim[0]
     im.set_clim(clim)
     texts = heatmap.annotate_heatmap(im, valfmt='{x:.1f}', threshold=thres,
             fontsize=8)
@@ -125,7 +125,7 @@ for i, bench in enumerate(benchmark_name):
 averaged_score_rank = np.mean(score_rank, axis=(2, 3))  # over measures
 averaged_bench_rank = np.mean(bench_rank, axis=(1, 2)).reshape(1, -1)
 clim = (np.min(averaged_score_rank), np.max(averaged_score_rank))
-thres = (clim[1] - clim[0]) * 0.6
+thres = (clim[1] - clim[0]) * 0.2 + clim[0]
 
 fig, axes = plt.subplots(2, 1, gridspec_kw={'height_ratios': [6, 3]},
                                figsize=(6, 3.5))

@@ -109,7 +109,7 @@ benchmark = np.asarray(benchmark).reshape(1, -1) * 1e3
 
 # Plot heatmap
 clim = (np.min(all_std), np.max(all_std))
-thres = clim[0] + (clim[1] - clim[0]) * 0.6
+thres = clim[0] + (clim[1] - clim[0]) * 0.2
 
 fig, axes = plt.subplots(2, 1, gridspec_kw={'height_ratios': [6, 3]},
                                figsize=(6, 3.5))
