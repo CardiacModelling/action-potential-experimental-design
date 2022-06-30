@@ -103,7 +103,7 @@ for ii, model in enumerate(model_side):
 
 
 # Plot histograms
-bins = 40
+bins = 60
 alpha = 0.75
 n_percentiles = None
 
@@ -119,17 +119,7 @@ for i in range(axes.size):
     axes[ai, aj].ticklabel_format(axis='both', style='sci', scilimits=(-2, 3))
 
     for j, samples_j in enumerate(all_samples):
-        if n_percentiles is None:
-            xmin = np.min(samples_j[:, i])
-            xmax = np.max(samples_j[:, i])
-        else:
-            xmin = np.percentile(samples_j[:, i],
-                                 50 - n_percentiles / 2.)
-            xmax = np.percentile(samples_j[:, i],
-                                 50 + n_percentiles / 2.)
-
-        if j == 0 and ai == 1 and aj == 2: # NOTE just to make it looks nicer
-            xmin, xmax = 0.75, 1.1
+        xmin, xmax = 0.98, 1.02
 
         xbins = np.linspace(xmin, xmax, bins)
 
@@ -142,5 +132,5 @@ for i in range(axes.size):
 
 axes[0, 0].legend(loc='lower left', bbox_to_anchor=(-0.2, 1.1), ncol=5,
         bbox_transform=axes[0, 0].transAxes)
-plt.savefig('%s/fig3a-cc.pdf' % (savedir), format='pdf', bbox_inches='tight')
+plt.savefig('%s/fig3a-cc-zoom.pdf' % (savedir), format='pdf', bbox_inches='tight')
 plt.close()
