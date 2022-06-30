@@ -42,7 +42,7 @@ parameters = np.ones(model.n_parameters())
 
 # Get optimal protocols and plot
 fig, axes = plt.subplots(len(opt_measures), len(opt_models), sharey=True,
-                         figsize=(7, 8))
+                         figsize=(7, 7))
 
 for i, opt_model in enumerate(opt_models):
     for j, opt_measure in enumerate(opt_measures):

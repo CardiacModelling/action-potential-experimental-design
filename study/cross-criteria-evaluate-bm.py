@@ -42,6 +42,9 @@ savedir = './cross-criteria-evaluate-cc'
 if not os.path.isdir(savedir):
     os.makedirs(savedir)
 
+# Denominators for biomarker normalisation
+denominators = np.array([134., 51., 104., 148., 177., 195.5, 212.5, 229.5,
+                         245., 258., 46.8, 290., 10., -88.05, 82., 3950., 46.])
 
 # Create models
 model_list = []
@@ -50,6 +53,8 @@ log_model_list = []
 for model_file in model_file_list:
     model_list.append(method.model.CCBiomarkerModel(model_file, transform=None, dt=dt))
     log_model_list.append(method.model.CCBiomarkerModel(model_file, transform=np.exp, dt=dt))
+    model_list[-1].set_denominators(denominators)
+    log_model_list[-1].set_denominators(denominators)
 
 # Model parameter bounds
 logp_lower = [-2] * len(method.model.parameters)  # maybe +/-3

@@ -127,7 +127,7 @@ class BiomarkerExtractor(object):
             mur = self.mur,
             pd = self.pd,
             rmp = self.rmp,
-            t2p = self.t2p,
+            #t2p = self.t2p,
             tri = self.tri,
             varea = self.varea,
             vmax = self.vmax,
@@ -317,7 +317,7 @@ class BiomarkerExtractor(object):
                 apdx.append(self.times[idx_f] - self.times[idx_i])
         return apdx
 
-    def dp(self, thr=0.15, tmax=300, kwargs={}):
+    def dp(self, thr=0.25, tmax=200, kwargs={}):
         """
         Extract dome peak values.
         """
@@ -326,7 +326,17 @@ class BiomarkerExtractor(object):
             fi = np.argmin(np.abs(self.times - (self.times[pi] + tmax)))
             t = self.times[pi:fi]
             idx = np.where(np.abs(self._spl(t, 1)) < thr)[0]  # 1 means first derivative
-            dp.append(np.max(self.aps[idx]))
+            dp.append(np.max(self.aps[pi:fi][idx]))
+            '''
+            import matplotlib.pyplot as plt
+            plt.plot(self.times, self.aps)
+            plt.plot(t, self.aps[pi:fi])
+            plt.plot(t[idx], self.aps[pi:fi][idx], 'o')
+            plt.plot(t, self._spl(t, 0))
+            plt.plot(t, self._spl(t, 1))
+            plt.plot(t[np.argmax(self.aps[pi:fi][idx])], dp[-1], 'x')
+            plt.show()
+            #'''
         return dp
 
     def mrr(self, kwargs={}):
