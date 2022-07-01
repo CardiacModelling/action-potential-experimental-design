@@ -44,6 +44,8 @@ parameters = np.ones(model.n_parameters())
 fig, axes = plt.subplots(len(opt_measures), len(opt_models), sharey=True,
                          figsize=(7, 7))
 
+names = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L']
+
 for i, opt_model in enumerate(opt_models):
     for j, opt_measure in enumerate(opt_measures):
         # Add titles
@@ -77,6 +79,11 @@ for i, opt_model in enumerate(opt_models):
         axes[j, i].plot(times, model.voltage(times), c=color)
         axes[j, i].tick_params(axis='y', labelcolor=color)
 
+        # Add protocol name
+        axes[j, i].text(-0.1, 1.1, names[j + i*6],
+                        transform=axes[j, i].transAxes,
+                        ha='center', va='center', weight='bold')
+
         # Twinx: current
         ax2 = axes[j, i].twinx()
 
@@ -86,11 +93,11 @@ for i, opt_model in enumerate(opt_models):
         ax2.set_ylim((-5, 3))
         if i != len(opt_models) - 1:
             ax2.tick_params(axis='y', labelright=False)
-        elif j == 3:
+        elif j == 2:
             ax2.set_ylabel('Current\n(A/F)', color='C3')
 
     axes[-1, i].set_xlabel('\nTime (each tick = 5s)')
-axes[3, 0].set_ylabel('Voltage\n(mV)', color='#7f7f7f')
+axes[2, 0].set_ylabel('Voltage\n(mV)', color='#7f7f7f')
 for j in range(len(opt_measures)):
     axes[j, 0].text(-0.5, 0.5, measure_side[j],
                     transform=axes[j, 0].transAxes, ha='center', va='center',

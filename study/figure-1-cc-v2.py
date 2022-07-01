@@ -44,8 +44,10 @@ parameters = np.ones(model.n_parameters())
 
 
 # Get optimal protocols and plot
-fig, axes = plt.subplots(len(opt_measures) * len(opt_models) + 1, 1, sharey=True,
+fig, axes = plt.subplots(len(opt_measures)*len(opt_models) + 1, 1, sharey=True,
                          figsize=(7, 4.5))
+
+names = ['M', 'N', 'O', 'P', 'Q', 'R']
 
 for i, opt_model in enumerate(opt_models):
     for j, opt_measure in enumerate(opt_measures):
@@ -93,6 +95,15 @@ for i, opt_model in enumerate(opt_models):
         axes[k].set_ylim((-2.5, 1.1))
         axes[k].set_yticks([])
 
+        # Add protocol name
+        if k < 3:
+            l = k
+        elif k >3:
+            l = k - 1
+        axes[k].text(-0.065, 0.5, names[l],
+                     transform=axes[k].transAxes,
+                     ha='center', va='center', weight='bold')
+
         # Twinx: current
         ax2 = axes[k].twinx()
         s = model.simulate(parameters, times)
@@ -111,7 +122,7 @@ for i, opt_model in enumerate(opt_models):
             axes[k].set_ylabel('Pacing', color='#7f7f7f')
 
 
-        axes[k].text(-0.1, 0.5, measure_side[j],
+        axes[k].text(-0.11, 0.5, measure_side[j],
                     transform=axes[k].transAxes, ha='center', va='center',
                     rotation=90)
 axes[3].axis('off')

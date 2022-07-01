@@ -47,6 +47,8 @@ parameters = np.ones(model.n_parameters())
 fig, axes = plt.subplots(len(opt_measures), len(opt_models), sharey=True,
                          figsize=(7, 4))
 
+names = ['M', 'N', 'O', 'P', 'Q', 'R']
+
 for i, opt_model in enumerate(opt_models):
     for j, opt_measure in enumerate(opt_measures):
         # Add titles
@@ -92,6 +94,11 @@ for i, opt_model in enumerate(opt_models):
         axes[j, i].set_ylim((-2.5, 1.1))
         axes[j, i].set_yticks([])
 
+        # Add protocol name
+        axes[j, i].text(-0.1, 1.1, names[j + i*3],
+                        transform=axes[j, i].transAxes,
+                        ha='center', va='center', weight='bold')
+
         # Twinx: current
         ax2 = axes[j, i].twinx()
         s = model.simulate(parameters, times)
@@ -111,7 +118,7 @@ for i, opt_model in enumerate(opt_models):
     axes[-1, i].set_xlabel('\nTime (each tick = 5s)')
 axes[1, 0].set_ylabel('Pacing', color='#7f7f7f')
 for j in range(len(opt_measures)):
-    axes[j, 0].text(-0.15, 0.5, measure_side[j],
+    axes[j, 0].text(-0.2, 0.5, measure_side[j],
                     transform=axes[j, 0].transAxes, ha='center', va='center',
                     rotation=90)
 fig.tight_layout()
