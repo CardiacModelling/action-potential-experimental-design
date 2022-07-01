@@ -137,7 +137,7 @@ for i in range(axes.size):
             axes[ai, aj].plot(xbins[:-1], H/np.max(H), ds='steps', label=all_names[j], color='C' + str(j))
 
 
-axes[0, 0].legend(loc='lower left', bbox_to_anchor=(-0.2, 1.1), ncol=5,
+axes[0, 0].legend(loc='lower left', bbox_to_anchor=(-0.05, 1.1), ncol=5,
         bbox_transform=axes[0, 0].transAxes)
 plt.savefig('%s/fig3a-cc-zoom.pdf' % (savedir), format='pdf', bbox_inches='tight')
 plt.close()

@@ -124,7 +124,7 @@ for i in range(axes.size):
 
     axes[ai, aj].axvline(1, color='k', linestyle='--', label='Ground truth')
 
-axes[0, 0].legend(loc='lower left', bbox_to_anchor=(0, 1), ncol=5,
+axes[0, 0].legend(loc='lower left', bbox_to_anchor=(-0.05, 1.1), ncol=5,
         bbox_transform=axes[0, 0].transAxes)
 plt.savefig('%s/fig3a.pdf' % (savedir), format='pdf', bbox_inches='tight')
 plt.close()

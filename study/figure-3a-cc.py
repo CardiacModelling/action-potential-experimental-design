@@ -149,7 +149,7 @@ for i in range(axes.size):
 
     axes[ai, aj].set_ylim([0, 1.02])
 
-axes[0, 0].legend(loc='lower left', bbox_to_anchor=(0., 1.), ncol=5,
+axes[0, 0].legend(loc='lower left', bbox_to_anchor=(-0.05, 1.1), ncol=5,
         bbox_transform=axes[0, 0].transAxes)
 plt.savefig('%s/fig3a-cc.pdf' % (savedir), format='pdf', bbox_inches='tight')
 plt.close()
