@@ -105,12 +105,12 @@ axins.plot(times, data, c='#7f7f7f', alpha=0.75)
 for i, si in enumerate(s1):
     o = model_pred.simulate(si)
     ax.plot(times, o, alpha=0.25 if i else 0.8, lw=0.5 if i else 1, c='C0',
-            label='_' if i else 'Biomarker')
+            label='_' if i else 'Biomarkers')
     axins.plot(times, o, alpha=0.25, lw=0.5, c='C0')
 for i, si in enumerate(s2):
     o = model_pred.simulate(si)
     ax.plot(times, o, alpha=0.25 if i else 0.8, lw=0.5 if i else 1, c='C1',
-            label='_' if i else 'LSA A')
+            label='_' if i else 'OED')
     axins.plot(times, o, alpha=0.25, lw=0.5, c='C1')
 ax.plot(times, data_no_noise, alpha=1, lw=0.8, ls='--', c='k',
         label='Groundtruth')
