@@ -16,6 +16,7 @@ from method.model import parameter_names as parameters_nice
 
 
 to_plot = [10, 9, -2, -1]  # best two and worst two
+names = ['U', 'V', 'M', 'N', 'O', 'P', 'Q', 'R', 'U', 'V']
 skip_chain = {  # ID, chain ID
     '123': [1],
     #'166': [0],
@@ -100,6 +101,7 @@ for ii, model in enumerate(model_side):
 
 #all_samples = [all_samples[i] for i in to_plot]
 #all_names = [all_names[i] for i in to_plot]
+all_names = ['Protocol ' + name for name in names]
 
 
 # Plot histograms
@@ -111,6 +113,9 @@ fig, axes = plt.subplots(2, 4, figsize=(10, 4))
 plt.subplots_adjust(hspace=.45, wspace=.25)
 for i in range(axes.size):
     ai, aj = int(i // 4), i % 4
+
+    axes[ai, aj].axvline(1, color='k', linestyle='--', label='Ground truth',
+                         zorder=10)
 
     axes[ai, aj].set_xlabel(parameters_nice[i], fontsize=14)
     if aj == 0:
@@ -126,9 +131,11 @@ for i in range(axes.size):
         #axes[ai, aj].hist(samples_j[:, i], bins=xbins, alpha=alpha, histtype='step', linewidth=1.5,
         #        density=True, label=all_names[j], color='C' + str(j))
         H, _ = np.histogram(samples_j[:, i], bins=xbins)
-        axes[ai, aj].bar(xbins[:-1], H/np.max(H), width=(xbins[1]-xbins[0]), label=all_names[j], color='C' + str(j))
+        if j in [0, 1]:
+            axes[ai, aj].bar(xbins[:-1], H/np.max(H), width=(xbins[1]-xbins[0]), label=all_names[j], color='C' + str(j), alpha=0.5)
+        else:
+            axes[ai, aj].plot(xbins[:-1], H/np.max(H), ds='steps', label=all_names[j], color='C' + str(j))
 
-    axes[ai, aj].axvline(1, color='k', linestyle='--', label='Ground truth')
 
 axes[0, 0].legend(loc='lower left', bbox_to_anchor=(-0.2, 1.1), ncol=5,
         bbox_transform=axes[0, 0].transAxes)

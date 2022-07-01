@@ -15,7 +15,8 @@ from method.model import parameter_names as parameters_nice
 #
 
 
-to_plot = [10, 9, -2, -1]  # best two and worst two
+to_plot = [3, 1, -2, -1]  # best two and worst two
+names = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'S', 'T']
 
 # Settings
 model_side = ['Single', 'Averaged']
@@ -87,7 +88,8 @@ del(s)
 
 
 all_samples = [all_samples[i] for i in to_plot]
-all_names = [all_names[i] for i in to_plot]
+#all_names = [all_names[i] for i in to_plot]
+all_names = ['Protocol ' + names[i] for i in to_plot]
 
 
 # Plot histograms
@@ -122,7 +124,7 @@ for i in range(axes.size):
 
     axes[ai, aj].axvline(1, color='k', linestyle='--', label='Ground truth')
 
-axes[0, 0].legend(loc='lower left', bbox_to_anchor=(-0.2, 1.1), ncol=5,
+axes[0, 0].legend(loc='lower left', bbox_to_anchor=(0, 1), ncol=5,
         bbox_transform=axes[0, 0].transAxes)
 plt.savefig('%s/fig3a.pdf' % (savedir), format='pdf', bbox_inches='tight')
 plt.close()
