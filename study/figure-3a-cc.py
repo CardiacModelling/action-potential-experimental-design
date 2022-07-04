@@ -134,7 +134,7 @@ for i in range(axes.size):
             xmax = np.percentile(samples_j[:, i],
                                  50 + n_percentiles / 2.)
 
-        if j == 0 and ai == 1 and aj == 2: # NOTE just to make it looks nicer
+        if j == 2 and ai == 1 and aj == 2: # NOTE just to make it looks nicer
             xmin, xmax = 0.75, 1.1
 
         xbins = np.linspace(xmin, xmax, bins)
@@ -143,9 +143,7 @@ for i in range(axes.size):
         #        density=True, label=all_names[j], color='C' + str(j))
         H, _ = np.histogram(samples_j[:, i], bins=xbins)
         #axes[ai, aj].bar(xbins[:-1], H/np.max(H), width=(xbins[1]-xbins[0]), label=all_names[j], color='C' + str(j))
-        x = np.append(np.append(xmin, xbins[:-1]), xmax)
-        y = np.append(np.append(0, H/np.max(H)), 0)
-        axes[ai, aj].plot(x, y, ds='steps', label=all_names[j], color='C' + str(j))
+        axes[ai, aj].plot(xbins[:-1], H/np.max(H), ds='steps', label=all_names[j], color='C' + str(j))
 
     axes[ai, aj].set_ylim([0, 1.02])
 
