@@ -143,7 +143,7 @@ for i in range(axes.size):
         #        density=True, label=all_names[j], color='C' + str(j))
         H, _ = np.histogram(samples_j[:, i], bins=xbins)
         #axes[ai, aj].bar(xbins[:-1], H/np.max(H), width=(xbins[1]-xbins[0]), label=all_names[j], color='C' + str(j))
-        axes[ai, aj].plot(xbins[:-1], H/np.max(H), ds='steps', label=all_names[j], color='C' + str(j))
+        axes[ai, aj].plot(xbins[:-1], H/np.max(H), ds='steps', label=all_names[j], color='C' + str(j), zorder=-j)
 
     axes[ai, aj].set_ylim([0, 1.02])
 

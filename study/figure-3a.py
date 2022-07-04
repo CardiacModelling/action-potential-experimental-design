@@ -119,8 +119,10 @@ for i in range(axes.size):
                                  50 + n_percentiles / 2.)
         xbins = np.linspace(xmin, xmax, bins)
 
-        axes[ai, aj].hist(samples_j[:, i], bins=xbins, alpha=alpha, histtype='step', linewidth=1.5,
-                density=True, label=all_names[j], color='C' + str(j))
+        axes[ai, aj].hist(samples_j[:, i], bins=xbins,
+                alpha=alpha, histtype='step', linewidth=1.5,
+                density=True, label=all_names[j], color='C' + str(j),
+                zorder=-j)
 
     axes[ai, aj].axvline(1, color='k', linestyle='--', label='Ground truth')
 
