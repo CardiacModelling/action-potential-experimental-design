@@ -55,7 +55,8 @@ fit_seed = np.random.randint(0, 2**30)
 np.random.seed(fit_seed)
 n_steps = 0
 
-pacing = [50, 1050, 2050, 3050]
+#pacing = [1050, 2050, 3050]
+pacing = [1000] * 5
 
 # Create true model and synthetic data
 model_true = method.model.CCModel(info_1.true_model_file, transform=None, dt=dt)
@@ -73,8 +74,9 @@ model_pred.design(pacing)
 # NOTE: Assume both pred models are the same.
 
 # Go through designs
-lastniter = 2000
-thinning = 100
+lastniter = 4000
+#lastniter = 200
+thinning = 50
 
 # Load samples
 try:
@@ -101,7 +103,8 @@ s2 = s2[:, -lastniter::thinning, :]
 s2 = s2.reshape(-1, s2.shape[-1])
 print(s2.shape)
 
-r = times < 6000
+#r = times < 6000
+r = times < 3000
 
 # Plot histograms
 fig,ax = plt.subplots(figsize=(4, 2.5))

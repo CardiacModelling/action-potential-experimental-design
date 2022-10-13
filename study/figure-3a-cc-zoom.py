@@ -16,7 +16,7 @@ from method.model import parameter_names as parameters_nice
 
 
 to_plot = [10, 9, -2, -1]  # best two and worst two
-names = ['U', 'V', 'M', 'N', 'O', 'P', 'Q', 'R', 'U', 'V']
+names = ['U', 'V', 'O', 'P', 'Q', 'R', 'S', 'T']
 skip_chain = {  # ID, chain ID
     '123': [1],
     #'166': [0],
@@ -119,7 +119,7 @@ for i in range(axes.size):
 
     axes[ai, aj].set_xlabel(parameters_nice[i], fontsize=14)
     if aj == 0:
-        axes[ai, aj].set_ylabel('Marginal\nposterior', fontsize=14)
+        axes[ai, aj].set_ylabel('Normalised\nposterior', fontsize=12)
 
     axes[ai, aj].ticklabel_format(axis='both', style='sci', scilimits=(-2, 3))
 

@@ -122,7 +122,7 @@ im1, _ = heatmap.heatmap(all_std, opt_model_labels, measure_side,
 _ = heatmap.annotate_heatmap(im1, valfmt='{x:.1f}', threshold=thres)
 im1.set_clim(clim)
 
-names = ['M', 'N', 'O', 'P', 'Q', 'R']
+names = ['O', 'P', 'Q', 'R', 'S', 'T']
 for i, name in enumerate(names):
     xi, yi = i % 3, int(i / 3)
     x = xi * (1 / 3.) + (1 / 3.) * 0.05

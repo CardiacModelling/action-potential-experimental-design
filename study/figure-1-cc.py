@@ -47,7 +47,7 @@ parameters = np.ones(model.n_parameters())
 fig, axes = plt.subplots(len(opt_measures), len(opt_models), sharey=True,
                          figsize=(7, 4))
 
-names = ['M', 'N', 'O', 'P', 'Q', 'R']
+names = ['O', 'P', 'Q', 'R', 'S', 'T']
 
 for i, opt_model in enumerate(opt_models):
     for j, opt_measure in enumerate(opt_measures):
@@ -116,6 +116,7 @@ for i, opt_model in enumerate(opt_models):
             ax2.set_ylabel('Voltage\n(mV)', color='C3')
 
     axes[-1, i].set_xlabel('\nTime (each tick = 5s)')
+
 axes[1, 0].set_ylabel('Pacing', color='#7f7f7f')
 for j in range(len(opt_measures)):
     axes[j, 0].text(-0.2, 0.5, measure_side[j],

@@ -17,7 +17,7 @@ cmap = sns.color_palette('crest', as_cmap=True)
 
 
 # Settings
-model_side = ['TNNP', 'Fink', 'OHara', 'Chang', 'Tomek', 'Averaged']
+model_side = ['TNNP', 'Fink', 'OHara', 'Dutta', 'Tomek', 'Averaged']
 measure_side = ['LSA A', 'LSA D', 'LSA E', 'GSA A', 'GSA D', 'GSA E',]
 #                'Shannon']
 
@@ -87,7 +87,8 @@ for i, opt_model in enumerate(opt_models):
     for j, opt_measure in enumerate(opt_measures):
         fig, axes = plt.subplots()
         im, cbar = heatmap.heatmap(score_rank[i, j], model_side, measure_side,
-                ax=axes, cmap=cmap, cbarlabel='Ranking score (%)')
+                ax=axes, cmap=cmap, cbar_kw=dict(extend='max'),
+                cbarlabel='Normalised score (%)')
         clim = (0, 100.)
         thres = (clim[1] - clim[0]) * 0.2 + clim[0]
         im.set_clim(clim)
@@ -108,7 +109,8 @@ for i, opt_model in enumerate(opt_models):
 for i, bench in enumerate(benchmark_name):
     fig, axes = plt.subplots()
     im, cbar = heatmap.heatmap(bench_rank[i], model_side, measure_side,
-            ax=axes, cmap=cmap, cbarlabel='Ranking score (%)')
+            ax=axes, cmap=cmap, cbar_kw=dict(extend='max'),
+            cbarlabel='Normalised score (%)')
     clim = (0, 100.)
     thres = (clim[1] - clim[0]) * 0.2 + clim[0]
     im.set_clim(clim)
@@ -154,7 +156,7 @@ im2, _ = heatmap.heatmap(averaged_bench_rank,
 _ = heatmap.annotate_heatmap(im2, valfmt='{x:.1f}', threshold=thres)
 im2.set_clim(clim)
 
-names = ['S', 'T']
+names = ['M', 'N']
 for i, name in enumerate(names):
     xi, yi = i % 2, int(i / 2)
     x = xi * (1 / 2.) + (1 / 2.) * 0.05

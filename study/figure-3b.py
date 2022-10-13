@@ -126,7 +126,7 @@ im2, _ = heatmap.heatmap(benchmark,
 _ = heatmap.annotate_heatmap(im2, valfmt='{x:.1f}', threshold=thres)
 im2.set_clim(clim)
 
-names = ['S', 'T']
+names = ['M', 'N']
 for i, name in enumerate(names):
     xi, yi = i % 2, int(i / 2)
     x = xi * (1 / 2.) + (1 / 2.) * 0.05

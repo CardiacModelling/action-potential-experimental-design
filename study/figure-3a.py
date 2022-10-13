@@ -16,7 +16,7 @@ from method.model import parameter_names as parameters_nice
 
 
 to_plot = [3, 1, -2, -1]  # best two and worst two
-names = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'S', 'T']
+names = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N']
 
 # Settings
 model_side = ['Single', 'Averaged']
@@ -102,9 +102,11 @@ plt.subplots_adjust(hspace=.45, wspace=.25)
 for i in range(axes.size):
     ai, aj = int(i // 4), i % 4
 
+    axes[ai, aj].axvline(1, color='k', linestyle='--', label='Ground truth')
+
     axes[ai, aj].set_xlabel(parameters_nice[i], fontsize=14)
     if aj == 0:
-        axes[ai, aj].set_ylabel('Marginal\nposterior', fontsize=14)
+        axes[ai, aj].set_ylabel('Normalised\nposterior', fontsize=12)
 
     axes[ai, aj].ticklabel_format(axis='both', style='sci', scilimits=(-2, 3))
 
@@ -119,12 +121,14 @@ for i in range(axes.size):
                                  50 + n_percentiles / 2.)
         xbins = np.linspace(xmin, xmax, bins)
 
-        axes[ai, aj].hist(samples_j[:, i], bins=xbins,
-                alpha=alpha, histtype='step', linewidth=1.5,
-                density=True, label=all_names[j], color='C' + str(j),
-                zorder=-j)
+        #axes[ai, aj].hist(samples_j[:, i], bins=xbins,
+        #        alpha=alpha, histtype='step', linewidth=1.5,
+        #        density=True, label=all_names[j], color='C' + str(j),
+        #        zorder=-j)
+        H, _ = np.histogram(samples_j[:, i], bins=xbins)
+        axes[ai, aj].plot(xbins[:-1], H/np.max(H), ds='steps', label=all_names[j], color='C' + str(j), alpha=alpha, linewidth=1.5, zorder=-j)
 
-    axes[ai, aj].axvline(1, color='k', linestyle='--', label='Ground truth')
+    axes[ai, aj].set_ylim([0, 1.02])
 
 axes[0, 0].legend(loc='lower left', bbox_to_anchor=(-0.05, 1.1), ncol=5,
         bbox_transform=axes[0, 0].transAxes)
