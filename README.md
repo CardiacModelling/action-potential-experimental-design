@@ -1,8 +1,10 @@
 # Action potential model experimental design
 
 Voltage clamp (VC) and current clamp (CC) protocol optimisation for action potential (AP) models.
-Consider we have a pool of AP models, and that we will have to pick the one that best fits to the VC or CC recordings by fitting only the conductance values.
-Can we design a voltage protocol that can allow us to distinguish between different AP models?
+Consider we have a pool of AP models, and that we will have to fit them to the VC or CC recordings.
+Can we automatically and objectively design VC or CC protocols that can allow us to fit these AP models?
+
+This repository contains code and data that reproduce the article "Model-driven optimal experimental design for calibrating cardiac electrophysiology models" by Chon Lok Lei, Michael Clerx, David Gavaghan and Gary Mirams.
 
 
 ### Requirements
