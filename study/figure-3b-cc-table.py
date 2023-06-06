@@ -45,17 +45,28 @@ skip_chain = {  # ID, chain ID
     #'166': [0],
 }
 
-mt = mf = 'ohara'
+try:
+    i_model = int(sys.argv[1])
+except IndexError:
+    i_model = 3
+
+model_list = ['tnnp', 'fink', 'grandi', 'ohara', 'cipa', 'tomek']
+
+mt = mf = model_list[i_model]
 f = '%s/true_%s-fit_%s-row_models-col_measures-cc.txt' \
     % (inputdir, mt, mf)
 id_matrix = np.loadtxt(f, dtype=int)
 
 f = '%s/biomarkers.txt' % inputdir
-bm = '%03d' % np.loadtxt(f, dtype=int)[3]
+bm = '%03d' % np.loadtxt(f, dtype=int)[i_model]
 
 f = '%s/1hz.txt' % inputdir
-hz1 = '%03d' % np.loadtxt(f, dtype=int)[3]
+hz1 = '%03d' % np.loadtxt(f, dtype=int)[i_model]
 
+f = '%s/groenendaal-2015-cc.txt' % inputdir
+gro = '%03d' % np.loadtxt(f, dtype=int)[i_model]
+
+print(mt)
 
 # Go through designs
 all_std = []
@@ -104,6 +115,18 @@ std = np.sqrt(np.mean((s - 1)**2, axis=0))
 benchmark.append(std)
 del(s)
 
+loadas = 'practicality-mcmc-cc-tmp/run_%s' % gro
+s = np.array(pints.io.load_samples('%s-chain.csv' % loadas, n=3))
+if gro in skip_chain.keys():
+    s = np.delete(s, skip_chain[gro], axis=0)
+s = s[:, -lastniter::thinning, :]
+s = s.reshape(-1, s.shape[-1])
+# std = np.mean(np.std(s, axis=0))
+# Calculat RMSE
+std = np.sqrt(np.mean((s - 1)**2, axis=0))
+benchmark.append(std)
+del(s)
+
 all_std = np.asarray(all_std) * 1e3
 benchmark = np.asarray(benchmark) * 1e3
 
@@ -111,7 +134,7 @@ benchmark = np.asarray(benchmark) * 1e3
 # Make table
 #r'Averaged posterior RMSE $\times10^3$'
 names = ['O', 'P', 'Q', 'R', 'S', 'T']
-bench = ['U', 'V']
+bench = ['U', 'V', 'W']
 #_ = heatmap.annotate_heatmap(im2, valfmt='{x:.1f}', threshold=thres)
 
 assert(len(names) == len(all_std))
@@ -127,19 +150,21 @@ print('\\midrule')
 for n, z in zip(names, all_std):
     l = '\\textbf{' + n +'} '
     for i, s in enumerate(z):
-        if i in [0, 6]:
+        if i in [1, 2]:
             l += '& %.2f ' % s
         else:
             l += '& %.1f ' % s
+    l += '& %.1f' % np.mean(z)
     l += '\\\\'
     print(l)
 
 for n, z in zip(bench, benchmark):
     l = '\\textbf{' + n +'} '
     for i, s in enumerate(z):
-        if i in [0, 6]:
+        if i in [1, 2]:
             l += '& %.2f ' % s
         else:
             l += '& %.1f ' % s
+    l += '& %.1f' % np.mean(z)
     l += '\\\\'
     print(l)

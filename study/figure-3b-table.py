@@ -56,6 +56,7 @@ ch3 = np.loadtxt(f, dtype=int)[i_model]
 f = '%s/groenendaal-2015.txt' % inputdir
 gro = np.loadtxt(f, dtype=int)[i_model]
 
+print(mt)
 
 # Go through designs
 all_std = []
@@ -124,6 +125,7 @@ for n, z in zip(names, all_std):
             l += '& %.2f ' % s
         else:
             l += '& %.1f ' % s
+    l += '& %.1f' % np.mean(z)
     l += '\\\\'
     print(l)
 
@@ -134,5 +136,6 @@ for n, z in zip(bench, benchmark):
             l += '& %.2f ' % s
         else:
             l += '& %.1f ' % s
+    l += '& %.1f' % np.mean(z)
     l += '\\\\'
     print(l)
