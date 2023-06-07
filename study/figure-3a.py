@@ -36,16 +36,23 @@ if not os.path.isdir(savedir):
 
 inputdir = './practicality-input'
 
-mt = mf = 'ohara'
+try:
+    i_model = int(sys.argv[1])
+except IndexError:
+    i_model = 3
+
+model_list = ['tnnp', 'fink', 'grandi', 'ohara', 'cipa', 'tomek']
+
+mt = mf = model_list[i_model]
 f = '%s/true_%s-fit_%s-row_models-col_measures-vc.txt' \
     % (inputdir, mt, mf)
 id_matrix = np.loadtxt(f, dtype=int)
 
 f = '%s/ch3.txt' % inputdir
-ch3 = np.loadtxt(f, dtype=int)[3]
+ch3 = np.loadtxt(f, dtype=int)[i_model]
 
 f = '%s/groenendaal-2015.txt' % inputdir
-gro = np.loadtxt(f, dtype=int)[3]
+gro = np.loadtxt(f, dtype=int)[i_model]
 
 
 # Go through designs
@@ -132,5 +139,5 @@ for i in range(axes.size):
 
 axes[0, 0].legend(loc='lower left', bbox_to_anchor=(-0.05, 1.1), ncol=5,
         bbox_transform=axes[0, 0].transAxes)
-plt.savefig('%s/fig3a.pdf' % (savedir), format='pdf', bbox_inches='tight')
+plt.savefig('%s/fig3a-%s.pdf' % (savedir, mt), format='pdf', bbox_inches='tight')
 plt.close()

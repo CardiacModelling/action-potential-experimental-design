@@ -54,7 +54,7 @@ score_matrix = np.array(score_matrix)
 
 # Benchmark
 benchmark = []
-benchmark_name = ['biomarkers-vm', '1hz'] #'groenendaal-2015']
+benchmark_name = ['biomarkers-vm', '1hz', 'groenendaal-2015-cc']
 for b in benchmark_name:
     score_file = './cross-criteria-evaluate-cc/score-%s.txt' % b
     try:
@@ -130,7 +130,7 @@ clim = (np.min(averaged_score_rank), np.max(averaged_score_rank))
 thres = (clim[1] - clim[0]) * 0.2 + clim[0]
 
 fig, axes = plt.subplots(2, 1, gridspec_kw={'height_ratios': [6, 3]},
-                               figsize=(6, 3.5))
+                               figsize=(6, 4))
 ax1, ax2 = axes
 
 im1, _ = heatmap.heatmap(averaged_score_rank, opt_model_labels, measure_side,
@@ -151,22 +151,22 @@ for i, name in enumerate(names):
 
 im2, _ = heatmap.heatmap(averaged_bench_rank,
                          ['Benchmark'],
-                         ['Biomarkers (Vm only)', '1 Hz'],#'Groenendaal et al.'],
+                         ['Biomarkers', '1 Hz', 'Groenendaal et al.'],
                          ax=ax2, cmap=cmap, cbarlabel=None,
-                         rotation=0)
+                         rotation=-15)
 _ = heatmap.annotate_heatmap(im2, valfmt='{x:.1f}', threshold=thres)
 im2.set_clim(clim)
 
-names = ['U', 'V']
+names = ['U', 'V', 'W']
 for i, name in enumerate(names):
-    xi, yi = i % 2, int(i / 2)
-    x = xi * (1 / 2.) + (1 / 2.) * 0.05
+    xi, yi = i % 3, int(i / 3)
+    x = xi * (1 / 3.) + (1 / 3.) * 0.05
     y = (1 - yi) * (1 / 1.) - (1 / 1.) * 0.05
     color = 'white'
     ax2.text(x, y, name, transform=ax2.transAxes,
              ha='left', va='top', weight='bold', color=color)
 
-#fig.tight_layout()
+fig.tight_layout()
 
 #fig.subplots_adjust(right=0.9)
 #cbar_ax = fig.add_axes([0.925, 0.15, 0.05, 0.8])

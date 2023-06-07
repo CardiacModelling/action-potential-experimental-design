@@ -44,8 +44,8 @@ parameters = np.ones(model.n_parameters())
 
 
 # Get optimal protocols and plot
-fig, axes = plt.subplots(len(opt_measures)*len(opt_models) + 3, 1, sharey=True,
-                         figsize=(7, 6))
+fig, axes = plt.subplots(len(opt_measures)*len(opt_models) + 4, 1, sharey=True,
+                         figsize=(7, 6.5))
 
 names = ['O', 'P', 'Q', 'R', 'S', 'T']
 
@@ -126,7 +126,9 @@ for i, opt_model in enumerate(opt_models):
                     transform=axes[k].transAxes, ha='center', va='center',
                     rotation=90)
 
-for j, protocol in enumerate(['1hz']):
+
+names = ['U/V', 'W']
+for j, protocol in enumerate(['1hz', 'groenendaal-2015-cc']):
     k = 2 * (len(opt_measures) + 1) + j
     # Add titles
     if j == 0:
@@ -171,7 +173,7 @@ for j, protocol in enumerate(['1hz']):
     axes[k].set_yticks([])
 
     # Add protocol name
-    axes[k].text(-0.065, 0.5, 'U/V',
+    axes[k].text(-0.065, 0.5, names[j],
                  transform=axes[k].transAxes,
                  ha='center', va='center', weight='bold')
 
@@ -189,13 +191,13 @@ for j, protocol in enumerate(['1hz']):
     #if i != len(opt_models) - 1:
     #    ax2.tick_params(axis='y', labelright=False)
     if k in [8]:
-        ax2.set_ylabel('Voltage (mV)', color='C3')
-        axes[k].set_ylabel('Pacing', color='#7f7f7f')
+        ax2.set_ylabel('Voltage (mV)           ', color='C3')
+        axes[k].set_ylabel('Pacing           ', color='#7f7f7f')
 
 
-    axes[k].text(-0.11, 0.5, '1 Hz',
-                transform=axes[k].transAxes, ha='center', va='center',
-                rotation=90)
+    #axes[k].text(-0.11, 0.5, '1 Hz',
+    #            transform=axes[k].transAxes, ha='center', va='center',
+    #            rotation=90)
 
 
 axes[3].axis('off')

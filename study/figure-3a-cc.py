@@ -43,16 +43,26 @@ if not os.path.isdir(savedir):
 
 inputdir = './practicality-input'
 
-mt = mf = 'ohara'
+try:
+    i_model = int(sys.argv[1])
+except IndexError:
+    i_model = 3
+
+model_list = ['tnnp', 'fink', 'grandi', 'ohara', 'cipa', 'tomek']
+
+mt = mf = model_list[i_model]
 f = '%s/true_%s-fit_%s-row_models-col_measures-cc.txt' \
     % (inputdir, mt, mf)
 id_matrix = np.loadtxt(f, dtype=int)
 
 f = '%s/biomarkers.txt' % inputdir
-bm = '%03d' % np.loadtxt(f, dtype=int)[3]
+bm = '%03d' % np.loadtxt(f, dtype=int)[i_model]
 
 f = '%s/1hz.txt' % inputdir
-hz1 = '%03d' % np.loadtxt(f, dtype=int)[3]
+hz1 = '%03d' % np.loadtxt(f, dtype=int)[i_model]
+
+f = '%s/groenendaal-2015-cc.txt' % inputdir
+gro = '%03d' % np.loadtxt(f, dtype=int)[i_model]
 
 
 # Go through designs
@@ -82,14 +92,30 @@ all_samples.append(s)
 all_names.append('1 Hz')
 del(s)
 
+loadas = 'practicality-mcmc-cc-tmp/run_%s' % gro
+s = np.array(pints.io.load_samples('%s-chain.csv' % loadas, n=3))
+print( gro, gro in skip_chain.keys())
+if gro in skip_chain.keys():
+    s = np.delete(s, skip_chain[gro], axis=0)
+s = s[:, -lastniter::thinning, :]
+s = s.reshape(-1, s.shape[-1])
+
+all_samples.append(s)
+all_names.append('Groenendaal et al.')
+del(s)
+
 for ii, model in enumerate(model_side):
     for jj, measure in enumerate(measure_side):
         int_id = id_matrix[ii, jj]
         run_id = '%03d' % int_id
 
         # Load samples
-        loadas = 'practicality-mcmc-cc/run_%s' % run_id
-        s = np.array(pints.io.load_samples('%s-chain.csv' % loadas, n=3))
+        try:
+            loadas = 'practicality-mcmc-cc/run_%s' % run_id
+            s = np.array(pints.io.load_samples('%s-chain.csv' % loadas, n=3))
+        except:
+            loadas = 'practicality-mcmc-cc-tmp/run_%s' % run_id
+            s = np.array(pints.io.load_samples('%s-chain.csv' % loadas, n=3))
         if run_id in skip_chain.keys():
             s = np.delete(s, skip_chain[run_id], axis=0)
         s = s[:, -lastniter::thinning, :]
@@ -149,5 +175,5 @@ for i in range(axes.size):
 
 axes[0, 0].legend(loc='lower left', bbox_to_anchor=(-0.05, 1.1), ncol=5,
         bbox_transform=axes[0, 0].transAxes)
-plt.savefig('%s/fig3a-cc.pdf' % (savedir), format='pdf', bbox_inches='tight')
+plt.savefig('%s/fig3a-cc-%s.pdf' % (savedir, mt), format='pdf', bbox_inches='tight')
 plt.close()

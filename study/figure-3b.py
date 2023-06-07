@@ -36,16 +36,23 @@ if not os.path.isdir(savedir):
 
 inputdir = './practicality-input'
 
-mt = mf = 'ohara'
+try:
+    i_model = int(sys.argv[1])
+except IndexError:
+    i_model = 3
+
+model_list = ['tnnp', 'fink', 'grandi', 'ohara', 'cipa', 'tomek']
+
+mt = mf = model_list[i_model]
 f = '%s/true_%s-fit_%s-row_models-col_measures-vc.txt' \
     % (inputdir, mt, mf)
 id_matrix = np.loadtxt(f, dtype=int)
 
 f = '%s/ch3.txt' % inputdir
-ch3 = np.loadtxt(f, dtype=int)[3]
+ch3 = np.loadtxt(f, dtype=int)[i_model]
 
 f = '%s/groenendaal-2015.txt' % inputdir
-gro = np.loadtxt(f, dtype=int)[3]
+gro = np.loadtxt(f, dtype=int)[i_model]
 
 
 # Go through designs
@@ -142,5 +149,5 @@ for i, name in enumerate(names):
 cbar = fig.colorbar(im1, ax=axes.ravel().tolist())
 cbar.ax.set_ylabel(r'Averaged posterior RMSE $\times10^3$', rotation=-90, va="bottom")
 
-fig.savefig('%s/fig3b.pdf' % (savedir), format='pdf', bbox_inches='tight')
+fig.savefig('%s/fig3b-%s.pdf' % (savedir, mt), format='pdf', bbox_inches='tight')
 plt.close('all')
