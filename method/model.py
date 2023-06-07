@@ -302,6 +302,10 @@ class CCBiomarkerModel(CCModel):
         super().__init__(*args, **kwargs)
         self.design([])
         self._biomarkers = BiomarkerExtractor()
+        self.set_denominators(None)
+
+    def set_denominators(self, v):
+        self._denominators = np.array(v)
 
     def set_biomarker_list(self, list_of_biomarkers):
         self._biomarkers.set_biomarker_list(list_of_biomarkers)
@@ -318,8 +322,15 @@ class CCBiomarkerModel(CCModel):
 
     def simulate(self, parameter, times=None):
         aps = self._simulate(parameter, times=times)
-        self._biomarkers.set_data(self._pacing, self.times(), aps)
-        return self.extract()
+        try:
+            self._biomarkers.set_data(self._pacing, self.times(), aps)
+            biomarkers = self.extract()
+        except:
+            return np.ones(len(self._biomarkers.list_of_biomarkers)) * float('inf')
+        if self._denominators is None:
+            return np.array(biomarkers)
+        else:
+            return np.array(biomarkers) / self._denominators
 
     def _simulate(self, parameter, times=None, extra_log=[]):
         """
@@ -352,7 +363,7 @@ class CCBiomarkerModel(CCModel):
             try:
                 # Pre-pace for some beats
                 self.presimulation.pre(self._prepace * self._prepace_cl)
-            except (myokit.SimulationError, myokit.SimulationCancelledError):
+            except: #(myokit.SimulationError, myokit.SimulationCancelledError, TypeError):
                 return np.ones(self._times.shape) * float('inf')
             # Get the state from pre-pacing
             state_to_set = self.presimulation.state()
@@ -379,6 +390,36 @@ class CCBiomarkerModel(CCModel):
             return d
         else:
             return d[self._voltage_name]
+
+
+class CCModelFlexible(CCModel):
+    """
+    # A current clamp (CC) model linking Myokit and Pints, PyOED ForwardModel.
+    # Allow injecting current to take arbitrary form instead of a fixed form
+    # stimulus pulse.
+    """
+    def design(self, variables):
+        # Assume protocol p is
+        # [stim_1_amp, stim_1_duration, stim_2_amp, ...]
+        # whilst no gap between stim i and stim i+1.
+        protocol = myokit.Protocol()
+        duration = 0
+        protocol.add_step(0, 50)  # No stim at the first 50 ms
+        duration += 50
+        for i in range(len(variables) // 2):
+
+            l = variables[2 * i]
+            d = variables[2 * i + 1]
+            # Add a stimulus at l size
+            protocol.add_step(l * self._stim_amp, d)
+            duration += d
+            # Not adding holding (no stimulus) for d duration
+        #protocol.add_step(1 * self._stim_amp, self._stim_dur)
+        protocol.add_step(0, 500)  # No stim at the last 500 ms
+        duration += 500
+        self.simulation.set_protocol(protocol)
+        del(protocol)
+        self._times = np.arange(0, duration, self.dt)
 
 
 class VCModel(pints.ForwardModel, pyoed.ForwardModel):
