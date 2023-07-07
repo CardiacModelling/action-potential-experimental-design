@@ -39,8 +39,8 @@ $ pip install -r requirements.txt
 
 If you publish any work based on the contents of this repository please cite ([CITATION file](CITATION)):
 
-Chon Lok Lei, Michael Clerx, David J Gavaghan, and Gary R Mirams.
-(2022).
+Chon Lok Lei, Michael Clerx, David J Gavaghan and Gary R Mirams.
+(2023).
 Model-driven optimal experimental design for calibrating cardiac electrophysiology models.
-_bioRxiv_ 2022.11.01.514669.
-[doi: 10.1101/2022.11.01.514669](https://doi.org/10.1101/2022.11.01.514669)
+_Computer Methods and Programs in Biomedicine_, 107690.
+[doi: 10.1016/j.cmpb.2023.107690](https://doi.org/10.1016/j.cmpb.2023.107690)
