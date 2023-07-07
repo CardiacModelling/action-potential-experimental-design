@@ -1,23 +1,22 @@
 To cite this repository or the article in publications, please use:
 
 Chon Lok Lei, Michael Clerx, David J Gavaghan, and Gary R Mirams.
-(2022).
+(2023).
 Model-driven optimal experimental design for calibrating cardiac electrophysiology models.
-_bioRxiv_ 2022.11.01.514669.
-[doi: 10.1101/2022.11.01.514669](https://doi.org/10.1101/2022.11.01.514669)
+_Computer Methods and Programs in Biomedicine_ 107690.
+[doi: 10.1016/j.cmpb.2023.107690](https://doi.org/10.1016/j.cmpb.2023.107690)
 
-https://doi.org/10.1101/2022.11.01.514669
+https://doi.org/10.1016/j.cmpb.2023.107690
 
 A BibTeX entry for LaTeX users is
 
-@article {Lei2022OED,
+@article {Lei2023OED,
 	author = {Lei, Chon Lok and Clerx, Michael and Gavaghan, David J and Mirams, Gary R},
 	title = {Model-driven optimal experimental design for calibrating cardiac electrophysiology models},
-	elocation-id = {2022.11.01.514669},
-	year = {2022},
-	doi = {10.1101/2022.11.01.514669},
-	publisher = {Cold Spring Harbor Laboratory},
-	URL = {https://www.biorxiv.org/content/early/2022/11/02/2022.11.01.514669},
-	eprint = {https://www.biorxiv.org/content/early/2022/11/02/2022.11.01.514669.full.pdf},
-	journal = {bioRxiv}
+	pages = {107690},
+	year = {2023},
+	doi = {10.1016/j.cmpb.2023.107690},
+        issn = {0169-2607},
+	URL = {https://www.sciencedirect.com/science/article/pii/S0169260723003553},
+	journal = {Computer Methods and Programs in Biomedicine}
 }
